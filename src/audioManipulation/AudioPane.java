@@ -6,7 +6,6 @@ import helperAndResourceClasses.SaveOutputChooser;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -17,7 +16,6 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
@@ -33,6 +31,7 @@ import vlcPlayer.PlayerPane;
  *Credits To: http://stackoverflow.com/questions/5766175/word-wrap-in-jbuttons
  *(Add word wrapping in JButton Text.)
  */
+
 @SuppressWarnings("serial")
 public class AudioPane extends JPanel {
 
@@ -45,17 +44,10 @@ public class AudioPane extends JPanel {
 	private final JPanel _audioSelectSubPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
 	private final JPanel _audioButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 5));
 	private	final JPanel _replaceOverlayButtonPanel = new JPanel();
-	//private final JPanel _outputNamePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
 	private final JPanel _processBarPanel = new JPanel(new BorderLayout());
-	private final JPanel _bottomSubButtonPanel = new JPanel(new GridLayout(0,3));
-
-	//private final JLabel _outputAudioLabel = new JLabel("Output Audio Name: (For Stripping) ");
-	//private final JLabel _outputVideoLabel = new JLabel("Output Video Name: (For All Functions)");
-
+	
 	private final JTextField _chosenAudioInput = new JTextField(28);
-	final JTextField _chosenVideoName = new JTextField(25);
-	final JTextField _chosenAudioName = new JTextField(25);
-
+	
 	private final JButton _audioFileButton = new JButton("Select Audio File");
 	private final JButton _audioPreviewButton = new JButton("Preview Audio File");
 	private final JButton _stripButton = new JButton("Strip Audio");

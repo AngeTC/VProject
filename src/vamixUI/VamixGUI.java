@@ -30,6 +30,7 @@ import javax.swing.event.ChangeListener;
 
 import audioManipulation.AudioPane;
 
+import subtitleRelated.SubtitlePane;
 import textRelated.TextPane;
 import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
@@ -55,11 +56,11 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 	private AudioPane _audioTab = new AudioPane();
 	private TextPane _textTab = new TextPane();
 	private VideoPane _videoTab = new VideoPane();
+	private SubtitlePane _subTab = new SubtitlePane();
 
 	private JPanel _leftPanel = new JPanel();
 
 	private JPanel _topButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-	//private JButton _saveButton = new JButton("Save");
 	private JButton _fileButton = new FileChooseButton("Open File");
 	private JButton _downloadButton = new JButton("Download");
 
@@ -109,6 +110,7 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 		_tabbedPane.add(_audioTab, "Audio");
 		_tabbedPane.add(_videoTab, "Video");
 		_tabbedPane.add(_textTab, "Text");
+		_tabbedPane.add(_subTab, "Subtitles");
 
 		//Add leftPanel and TabbedPane to the Main GUI.
 		add(_leftPanel, BorderLayout.CENTER);
@@ -382,7 +384,7 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 	 * @param args
 	 */
 	public static void main(String[] args){
-		// Set look and feel of GUI.
+		// Set look and feel of GUI. TODO
 //		try {
 //			UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
 //		} catch (ClassNotFoundException | InstantiationException
@@ -396,6 +398,10 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 				VamixGUI.getInstance();
 			}
 		});
+	}
+
+	public String getCurrentTime() {
+		return _timeLabel.getText();
 	}
 }
 

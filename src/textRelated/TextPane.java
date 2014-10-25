@@ -9,21 +9,15 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Vector;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JColorChooser;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -44,7 +38,7 @@ import videoManipulation.VideoPane;
 /**
  * Pane for text adding functionality.
  * 
- * @author Original author: kxie094
+ * @author Original author: kxie094 (and further developed by acas212)
  *
  */
 @SuppressWarnings("serial")
@@ -64,7 +58,6 @@ public class TextPane extends JPanel {
 	private final JPanel _fontAndColourPanel = new JPanel();
 	private final JPanel _tableButtonsPanel = new JPanel();
 	private final JPanel _editAndDeletePanel = new JPanel();
-	private final JPanel _playPanel = new JPanel();
 	private final JPanel _inputVideoPanel = new JPanel();
 	private final JPanel _progressAndButtonPanel = new JPanel(new BorderLayout());
 	

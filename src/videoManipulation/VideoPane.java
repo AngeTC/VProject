@@ -4,9 +4,7 @@ import helperAndResourceClasses.BashCommand;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
@@ -16,8 +14,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Hashtable;
-
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -26,11 +22,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingWorker;
 
 
 @SuppressWarnings("serial")
@@ -88,7 +82,7 @@ public class VideoPane extends JPanel implements ActionListener {
 	private final JLabel _timeSep3 = new JLabel(":");
 	private final JLabel _timeSep4 = new JLabel(":");
 
-	private JProgressBar _processBar = new JProgressBar();
+	JProgressBar _processBar = new JProgressBar();
 
 	private File _selectedVideo;
 
@@ -100,13 +94,13 @@ public class VideoPane extends JPanel implements ActionListener {
 
 		//Orientation (Rotate and flip) Layout:
 		_orientationAndVideoSelectPanel.add(_orientationPanel, BorderLayout.CENTER);
-		_orientationAndVideoSelectPanel.add(_videoSelectPanel, BorderLayout.NORTH);
-
-		_videoSelectPanel.setBorder(BorderFactory.createTitledBorder("Select Video To Edit:"));
-		_videoSelectPanel.setPreferredSize(new Dimension(370, 70));
-		_videoSelectPanel.add(_videoSelectField);
-		_videoSelectField.setEditable(false);
-		_videoSelectPanel.add(_videoSelectButton);
+//		//_orientationAndVideoSelectPanel.add(_videoSelectPanel, BorderLayout.NORTH);
+//
+//		_videoSelectPanel.setBorder(BorderFactory.createTitledBorder("Select Video To Edit:"));
+//		_videoSelectPanel.setPreferredSize(new Dimension(370, 70));
+//		_videoSelectPanel.add(_videoSelectField);
+//		_videoSelectField.setEditable(false);
+//		_videoSelectPanel.add(_videoSelectButton);
 
 		_orientationPanel.setPreferredSize(new Dimension(370, 100));
 		_orientationPanel.setBorder(BorderFactory.createTitledBorder("Video Orientation:"));
@@ -200,6 +194,7 @@ public class VideoPane extends JPanel implements ActionListener {
 			}
 			
 			System.out.println(getDurationTime(_selectedVideo.getAbsolutePath())); //TODO
+			
 		} else if (ae.getSource() == _videoSelectButton) {
 			JFileChooser fileChooser = new JFileChooser();
 			int returnValue = fileChooser.showOpenDialog(null);
@@ -276,7 +271,7 @@ public class VideoPane extends JPanel implements ActionListener {
 				if (canRotateOrFlip) {
 					if (ae.getSource() == _applyRotate) {
 						String rotateOption = _rotateOptions[(_rotateSelect.getSelectedIndex())].replace("°", "");
-						_oriWorker = new OrientationWorker(_selectedVideo, outputFile + ".mp4", rotateOption, false);
+						_oriWorker = new OrientationWorker(this, _selectedVideo, outputFile + ".mp4", rotateOption, false);
 						_oriWorker.execute();
 
 						_processBar.setIndeterminate(true);
@@ -285,7 +280,7 @@ public class VideoPane extends JPanel implements ActionListener {
 						disableFunctions();
 					} else {
 						String flipOption = _flipOptions[(_flipSelect.getSelectedIndex())];
-						_oriWorker = new OrientationWorker(_selectedVideo, outputFile + ".mp4", flipOption, true);
+						_oriWorker = new OrientationWorker(this, _selectedVideo, outputFile + ".mp4", flipOption, true);
 						_oriWorker.execute();
 
 						_processBar.setIndeterminate(true);
@@ -339,7 +334,7 @@ public class VideoPane extends JPanel implements ActionListener {
 				}
 
 				if (canChangeSpeed) {
-					_spdWorker = new SpeedChangeWorker(_selectedVideo, outputFile + ".mp4", _speedOptions[_speedSelect.getSelectedIndex()]);
+					_spdWorker = new SpeedChangeWorker(this, _selectedVideo, outputFile + ".mp4", _speedOptions[_speedSelect.getSelectedIndex()]);
 					_spdWorker.execute();
 
 					_processBar.setIndeterminate(true);
@@ -412,7 +407,7 @@ public class VideoPane extends JPanel implements ActionListener {
 					String startFrame = Integer.toString(selectedVideoFPS * startFadeTime); 
 					String durationOfFrames = Integer.toString(selectedVideoFPS * fadeDuration);
 					
-					_fadeWorker = new FadeWorker(_selectedVideo, outputFile + ".mp4", 
+					_fadeWorker = new FadeWorker(this, _selectedVideo, outputFile + ".mp4", 
 							fadeSelection, startFrame, durationOfFrames);
 					_fadeWorker.execute();
 
@@ -422,414 +417,6 @@ public class VideoPane extends JPanel implements ActionListener {
 					disableFunctions();
 				}
 			}
-		}
-	}
-
-	/**
-	 * SwingWorker for changing orientation of video.
-	 */
-	class OrientationWorker extends SwingWorker<Void, Void> {
-
-		private boolean _isFlip = false;
-		private String _selection;
-		private String _outputName;
-		private File _video;
-		private Process _process;
-
-		/**
-		 * Constructor for OrienationWorker.
-		 */
-		public OrientationWorker(File video, String output, String select, boolean isFlip) {
-			_selection = select;
-			_outputName = output;
-			_isFlip = isFlip;
-			_video = video;
-		}
-
-		/**
-		 * Runs the background process for 'avconv'.
-		 */
-		@Override
-		protected Void doInBackground() throws Exception {
-
-			ProcessBuilder builder = null;
-
-			if (_isFlip) {
-				if (_selection.equals("Flip Vertically")) {
-					builder = new ProcessBuilder("avconv", "-y", "-i", _video.getPath(), "-vf", "vflip", "-strict", "experimental", _outputName);
-
-				} else if (_selection.equals("Flip Horizontally")) {
-					builder = new ProcessBuilder("avconv", "-y", "-i", _video.getPath(), "-vf", "hflip", "-strict", "experimental", _outputName);
-
-				}
-
-			} else {
-				if (_selection.equals("90")) {
-					builder = new ProcessBuilder("avconv", "-y", "-i", _video.getPath(), "-vf", "transpose=1", "-strict", "experimental", _outputName);
-
-				} else if (_selection.equals("180")) {
-					builder = new ProcessBuilder("avconv", "-y", "-i", _video.getPath(), "-vf", "transpose=1,transpose=1", "-strict", "experimental", _outputName);
-
-				} else if (_selection.equals("270")) {
-					builder = new ProcessBuilder("avconv", "-y", "-i", _video.getPath(), "-vf", "transpose=2", "-strict", "experimental", _outputName);
-
-				}
-			}
-
-			try {		
-				//Create and run new process for avconv command.
-				builder.redirectErrorStream(true);
-
-				_process = builder.start();
-				InputStream stdout = _process.getInputStream();
-
-				BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-				String line = null;
-
-				//New list for avconv output.
-				ArrayList<String> extractOutput = new ArrayList<String>();
-
-				while ((line = stdoutBuffered.readLine()) != null ) {
-					//If cancelled, end avconv command.
-					if (this.isCancelled()) {
-						_process.destroy();
-
-						//Else, add line to the output list.
-					} else {
-						extractOutput.add(line);
-						System.out.println(line);
-					}
-				}
-
-				/*
-				 *If any error occurred, display new error message by extracting the final
-				 *line of the extract output list.
-				 */
-				if (_process.waitFor() != 0) {
-					String errorMsg = extractOutput.get(extractOutput.size() - 1);
-					JOptionPane.showMessageDialog(null, "Error: " + errorMsg);
-				}
-
-			} catch (Exception e) {}
-			return null;
-		}
-
-		/**
-		 * Method which displays the final message once the
-		 * worker has finished / been cancelled.
-		 */
-		@Override
-		protected void done() {
-			try {
-				//If cancelled, display 'cancelled' message.
-				if (isCancelled()) {
-					JOptionPane.showMessageDialog(null, "Orientaion Change Cancelled.");
-
-					//If no errors occurred, display 'complete' status.	
-				} else if (_process.waitFor() == 0) {
-					JOptionPane.showMessageDialog(null, "Orientaion Change Complete.");
-				}
-
-				//Enable function buttons.
-				enableFunctions();
-
-				//Reset Process bar:
-				_processBar.setIndeterminate(false);
-				_processBar.setString("No Tasks Being Performed");
-
-			} catch (InterruptedException e) {}
-		}
-	}
-
-	/**
-	 * SwingWorker for changing speed of video.
-	 */
-	class SpeedChangeWorker extends SwingWorker<Void, Void> {
-
-		File _video;
-		String _outputName;
-		double _speedValue;
-		Process changingProcess;
-
-		public SpeedChangeWorker(File video, String outputFile, String speedValue) {
-			_video = video;
-			_outputName = outputFile;
-
-			if (speedValue.equals("2x")) {
-				_speedValue = 2;
-			} else if (speedValue.equals("1.5x")) {
-				_speedValue = 1.5;
-			} else if (speedValue.equals("0.75x")) {
-				_speedValue = 0.75;
-			} else if (speedValue.equals("0.5x")) {
-				_speedValue = 0.5;
-			}
-		}
-
-		@Override
-		protected Void doInBackground() throws Exception {
-			try {			
-				//New list for avconv output.
-				ArrayList<String> speedOutput = new ArrayList<String>();
-
-				//Process 1 (Extract video only):  
-				ProcessBuilder builder = new ProcessBuilder("avconv", "-y", "-i", _video.getPath(), "-map", "0:0", "video.mp4");
-				builder.redirectErrorStream(true);
-				changingProcess = builder.start();
-				InputStream stdout = changingProcess.getInputStream();
-				BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-				String line = null;
-
-				while ((line = stdoutBuffered.readLine()) != null ) {
-					//If cancelled, end current avconv command and exit doInBackground().
-					if (this.isCancelled()) {
-						changingProcess.destroy();
-						return null;
-					} else {
-						//Else, add line to the output list.
-						speedOutput.add(line);
-						System.out.println(line);
-					}
-				}
-
-				if (changingProcess.waitFor() != 0) {
-					String errorMsg = speedOutput.get(speedOutput.size() - 1);
-					JOptionPane.showMessageDialog(null, "Error: " + errorMsg);
-					return null;
-				}
-
-				//Process 2 (Extract audio only):
-				builder = new ProcessBuilder("avconv", "-y", "-i", _video.getPath(), "-map", "0:1", "audio.wav");
-				changingProcess = builder.start();
-				stdout = changingProcess.getInputStream();
-				stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-
-				while ((line = stdoutBuffered.readLine()) != null ) {
-					//If cancelled, end current avconv command and exit doInBackground().
-					if (this.isCancelled()) {
-						changingProcess.destroy();
-						return null;
-					} else {
-						//Else, add line to the output list.
-						speedOutput.add(line);
-						System.out.println(line);
-					}
-				}
-
-				if (changingProcess.waitFor() != 0) {
-					String errorMsg = speedOutput.get(speedOutput.size() - 1);
-					JOptionPane.showMessageDialog(null, "Error: " + errorMsg);
-					return null;
-				}
-
-				//Process 3 (Change Audio Speed with sox function):
-				builder = new ProcessBuilder("sox", "audio.wav", "audioq.wav", "tempo", Double.toString(_speedValue));
-				changingProcess = builder.start();
-				stdout = changingProcess.getInputStream();
-				stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-				line = null;
-
-				while ((line = stdoutBuffered.readLine()) != null ) {
-					//If cancelled, end current avconv command and exit doInBackground().
-					if (this.isCancelled()) {
-						changingProcess.destroy();
-						return null;
-					} else {
-						//Else, add line to the output list.
-						speedOutput.add(line);
-						System.out.println(line);
-					}
-				}
-				if (changingProcess.waitFor() != 0) {
-					String errorMsg = speedOutput.get(speedOutput.size() - 1);
-					JOptionPane.showMessageDialog(null, "Error: " + errorMsg);
-					return null;
-				}
-
-				//Process 4 (Change video speed with avconv):
-				builder = new ProcessBuilder("avconv", "-y", "-i", "video.mp4", "-filter:v",
-						"setpts=" + Double.toString(1/_speedValue) + "*PTS", "output.mp4");
-				changingProcess = builder.start();
-				stdout = changingProcess.getInputStream();
-				stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-				line = null;
-
-				while ((line = stdoutBuffered.readLine()) != null ) {
-					//If cancelled, end current avconv command and exit doInBackground().
-					if (this.isCancelled()) {
-						changingProcess.destroy();
-						return null;
-					} else {
-						//Else, add line to the output list.
-						speedOutput.add(line);
-						System.out.println(line);
-					}
-				}
-				if (changingProcess.waitFor() != 0) {
-					String errorMsg = speedOutput.get(speedOutput.size() - 1);
-					JOptionPane.showMessageDialog(null, "Error: " + errorMsg);
-					return null;
-				}
-
-				//Process 5 (Combine modified video and audio together):
-				builder = new ProcessBuilder("avconv", "-y", "-i", "output.mp4", "-i", "audioq.wav", 
-						"-strict", "experimental", _outputName);
-				changingProcess = builder.start();
-				stdout = changingProcess.getInputStream();
-				stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-				line = null;
-
-				while ((line = stdoutBuffered.readLine()) != null ) {
-					//If cancelled, end current avconv command and exit doInBackground().
-					if (this.isCancelled()) {
-						changingProcess.destroy();
-						return null;
-					} else {
-						//Else, add line to the output list.
-						speedOutput.add(line);
-						System.out.println(line);
-					}
-				}
-
-				if (changingProcess.waitFor() != 0) {
-					String errorMsg = speedOutput.get(speedOutput.size() - 1);
-					JOptionPane.showMessageDialog(null, "Error: " + errorMsg);
-					return null;
-				}
-
-			} catch (IOException | HeadlessException | InterruptedException e) {
-				e.printStackTrace();
-			}
-			return null;
-		}
-
-		@Override
-		protected void done() {
-			try {
-				//If cancelled, display 'cancelled' message.
-				if (isCancelled()) {
-					JOptionPane.showMessageDialog(null, "Speed change has been cancelled.");
-
-				} else if (changingProcess.waitFor() == 0) {
-					//If no errors occurred, display 'complete' status.	
-					JOptionPane.showMessageDialog(null, "Speed Change Complete.");
-				}
-
-				//Remove Temporary files.
-				removeTempFiles();
-
-				//Enable function buttons.
-				enableFunctions();
-
-				//Reset Process bar:
-				_processBar.setIndeterminate(false);
-				_processBar.setString("No Tasks Being Performed");
-
-			} catch (InterruptedException e) {}
-		}
-	}
-
-	/**
-	 * SwingWorker for adding fade to video.
-	 */
-	class FadeWorker extends SwingWorker<Void, Void> {
-
-		private String _fadeSelection;
-		private String _startFrame;
-		private String _durationOfFrames;
-		private String _outputName;
-		private File _video;
-
-		private Process _process;
-
-		/**
-		 * Constructor for FadeWorker.
-		 */
-		public FadeWorker(File video, String output, String fadeSelect, String startFrame, String durationOfFrames) {
-			System.out.println(fadeSelect);
-			if (fadeSelect.equals("Fade In")) {
-				_fadeSelection = "in";
-			} else  {
-				_fadeSelection = "out";
-			} 
-			_startFrame = startFrame;
-			_durationOfFrames = durationOfFrames;
-			_outputName = output;
-			_video = video;
-		}
-
-		/**
-		 * Runs the background process for 'avconv'.
-		 */
-		@Override
-		protected Void doInBackground() throws Exception {
-
-			ProcessBuilder builder = new ProcessBuilder("avconv", "-y", "-i", _video.getPath(), 
-					"-filter:v", "fade=" + _fadeSelection + ":" + _startFrame + 
-					":" + _durationOfFrames, "-strict", "experimental", _outputName);
-
-			try {		
-				//Create and run new process for avconv command.
-				builder.redirectErrorStream(true);
-
-				_process = builder.start();
-				InputStream stdout = _process.getInputStream();
-
-				BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-				String line = null;
-
-				//New list for avconv output.
-				ArrayList<String> avconvOutput = new ArrayList<String>();
-
-				while ((line = stdoutBuffered.readLine()) != null ) {
-					//If cancelled, end avconv command.
-					if (this.isCancelled()) {
-						_process.destroy();
-						
-						//Else, add line to the output list.
-					} else {
-						avconvOutput.add(line);
-						System.out.println(line);
-					}
-				}
-
-				/*
-				 *If any error occurred, display new error message by extracting the final
-				 *line of the extract output list.
-				 */
-				if (_process.waitFor() != 0) {
-					String errorMsg = avconvOutput.get(avconvOutput.size() - 1);
-					JOptionPane.showMessageDialog(null, "Error: " + errorMsg);
-				}
-
-			} catch (Exception e) {}
-			return null;
-		}
-
-		/**
-		 * Method which displays the final message once the
-		 * worker has finished / been cancelled.
-		 */
-		@Override
-		protected void done() {
-			try {
-				//If cancelled, display 'cancelled' message.
-				if (isCancelled()) {
-					JOptionPane.showMessageDialog(null, "Fade Cancelled.");
-
-					//If no errors occurred, display 'complete' status.	
-				} else if (_process.waitFor() == 0) {
-					JOptionPane.showMessageDialog(null, "Fade Complete.");
-				}
-
-				//Enable function buttons.
-				enableFunctions();
-
-				//Reset Process bar:
-				_processBar.setIndeterminate(false);
-				_processBar.setString("No Tasks Being Performed");
-
-			} catch (InterruptedException e) {}
 		}
 	}
 

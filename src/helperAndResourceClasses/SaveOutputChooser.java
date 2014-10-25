@@ -5,7 +5,8 @@ import java.io.File;
 import javax.swing.JFileChooser;
 
 /**
- * Class for selecting a location to save output.
+ * JFileChooser for selecting a location to save 
+ * an output.
  * 
  * @author acas212
  *
