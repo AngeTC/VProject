@@ -12,13 +12,9 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.imageio.ImageIO;
@@ -39,7 +35,6 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingWorker;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
@@ -103,7 +98,7 @@ public class TextPane extends JPanel {
 	
 	private final JButton _addButton = new JButton("Add Caption");
 	
-	private final JProgressBar _progressBar = new JProgressBar();
+	final JProgressBar _progressBar = new JProgressBar();
 
 	// JTable and associated buttons
 	String[] fields = {"Text", "Start", "End", "Font", "Colour"};
@@ -358,7 +353,7 @@ public class TextPane extends JPanel {
 				if (canDraw && _captionsTable.getSelectedRow() != -1) {
 					int row = _captionsTable.getSelectedRow();
 						
-						_avconvTask = new AvconvTask(_inputVideo.getText(), _tableModel.getValueAt(row, 0).toString(), getTimeInSeconds(_tableModel.getValueAt(row, 1).toString()), getTimeInSeconds(_tableModel.getValueAt(row, 2).toString()),
+						_avconvTask = new AvconvTask(TextPane.this, _inputVideo.getText(), _tableModel.getValueAt(row, 0).toString(), getTimeInSeconds(_tableModel.getValueAt(row, 1).toString()), getTimeInSeconds(_tableModel.getValueAt(row, 2).toString()),
 								_fontPath, _colourHexValue, _fontSize, outputFile + ".mp4");
 						_avconvTask.execute();
 						
@@ -536,101 +531,5 @@ public class TextPane extends JPanel {
 		
 		String[] captionData = {_textInput.getText(), getTimeAsString(1), getTimeAsString(2), _fontPath, _colourHexValue};
 		_tableModel.addRow(captionData);
-	}
-	
-	class AvconvTask extends SwingWorker<Void, String> {
-
-		private String _videoPath;
-		private String _text;
-		private String _start;
-		private String _end;
-		private String _fontPath;
-		private String _color;
-		private String _fontSize;
-		private String _outputFile;
-		
-		private Process _process = null;
-
-		public AvconvTask(String videoPath, String text, String start, String end, String fontPath, String colour, String fontsize, String outputFile) {
-			_videoPath = videoPath;
-			_text = text;
-			_start = start;
-			_end = end;
-			_fontPath = fontPath;
-			_color = colour;
-			_fontSize = fontsize;
-			_outputFile = outputFile;
-		}
-
-		/**
-		 * Runs the background process for 'avconv'.
-		 */
-		@Override
-		protected Void doInBackground() throws Exception {
-
-			ProcessBuilder builder = new ProcessBuilder("avconv", "-y", "-i", _videoPath, "-vf", 
-					"drawtext=fontfile='" + _fontPath 
-					+ "':fontcolor=" + _color 
-					+ ":fontsize=" + _fontSize 
-					+ ":text='" + _text 
-					+ ":x=main_w/2-text_w/2:y=main_h/2-text_h/2"
-					+ "':draw='gt(t," + _start + ")*lt(t," + _end + ")'", 
-					"-strict", "experimental", _outputFile);
-
-			try {		
-				//Create and run new process.
-				builder.redirectErrorStream(true);
-
-				_process = builder.start();
-				InputStream stdout = _process.getInputStream();
-
-				BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-				String line = null;
-
-				//New list for output.
-				ArrayList<String> avconvOutput = new ArrayList<String>();
-
-				while ((line = stdoutBuffered.readLine()) != null ) {
-					// If process is cancelled, destroy process.
-					if (isCancelled()) {
-						_process.destroy();
-						
-					} else {
-						avconvOutput.add(line);
-						System.out.println(line);
-					}
-				}
-
-				/*
-				 *If any error occurs, display new error message by extracting the final
-				 *line of the output list.
-				 */
-				if (_process.waitFor() != 0) {
-					String errorMsg = avconvOutput.get(avconvOutput.size() - 1);
-					JOptionPane.showMessageDialog(null, "Error: " + errorMsg);
-				}
-
-			} catch (Exception e) {}
-			return null;
-		}
-
-		protected void done() {
-			try {
-				//If cancelled, display 'cancelled' message.
-				if (isCancelled()) {
-					JOptionPane.showMessageDialog(null, "Text Adding Cancelled.");
-
-					//If no errors occurred, display 'complete' status.
-				} else if (_process.waitFor() == 0) {
-					
-					//If no errors occurred, display 'complete' status.
-					JOptionPane.showMessageDialog(null, "Text Adding Completed.");
-				}
-				
-				_progressBar.setIndeterminate(false);
-				_progressBar.setString("No Task Being Performed");
-				
-			} catch (InterruptedException e) {}
-		}
 	}
 }

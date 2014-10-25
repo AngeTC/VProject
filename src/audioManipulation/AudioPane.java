@@ -37,36 +37,35 @@ import vlcPlayer.PlayerPane;
 public class AudioPane extends JPanel implements ActionListener {
 
 	private final AudioPane audioPane = this;
-	
+
 	private final JPanel _stripPanel = new JPanel(new BorderLayout());
 	private final JPanel _stripCBoxPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 5));
 	private final JPanel _stripButtonPanel = new JPanel();
-	private final JPanel _audioSelectPanel = new JPanel(new BorderLayout());
+	private final JPanel _replaceOverlayPanel = new JPanel(new BorderLayout());
 	private final JPanel _audioSelectSubPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
 	private final JPanel _audioButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 5));
-	private final JPanel _outputNamePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
-	private final JPanel _bottomButtonPanel = new JPanel(new BorderLayout());
+	private	final JPanel _replaceOverlayButtonPanel = new JPanel();
+	//private final JPanel _outputNamePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+	private final JPanel _processBarPanel = new JPanel(new BorderLayout());
 	private final JPanel _bottomSubButtonPanel = new JPanel(new GridLayout(0,3));
-	
-	private final JLabel _stripLabel = new JLabel("(For Strip Function)");
-	private final JLabel _outputAudioLabel = new JLabel("Output Audio Name: (For Stripping) ");
-	private final JLabel _outputVideoLabel = new JLabel("Output Video Name: (For All Functions)");
-	private final JLabel _replaceAndOverlayLabel = new JLabel("(For Replace/Overlay Functions)");
-	
+
+	//private final JLabel _outputAudioLabel = new JLabel("Output Audio Name: (For Stripping) ");
+	//private final JLabel _outputVideoLabel = new JLabel("Output Video Name: (For All Functions)");
+
 	private final JTextField _chosenAudioInput = new JTextField(25);
 	final JTextField _chosenVideoName = new JTextField(25);
 	final JTextField _chosenAudioName = new JTextField(25);
-	
+
 	private final JButton _audioFileButton = new JButton("Select Audio File");
 	private final JButton _audioPreviewButton = new JButton("Preview Audio File");
 	private final JButton _stripButton = new JButton("Strip Audio");
-	private final JButton _cancelButton = new JButton("Cancel");
 	private final JButton _replaceButton = new JButton("Replace Audio");
 	private final JButton _overlayButton = new JButton("Overlay Audio");
-	
+	private final JButton _cancelButton = new JButton("Cancel");
+
 	private final JCheckBox _removeAudioOnVideo = new JCheckBox("Remove Stripped Audio on Video?");
 	private final JCheckBox _haveAudioOutput = new JCheckBox("Create Output of Stripped Audio?");
-	
+
 	final JProgressBar _processBar = new JProgressBar();
 
 	ExtractWorker _eW;
@@ -82,65 +81,67 @@ public class AudioPane extends JPanel implements ActionListener {
 		setLayout(new FlowLayout());
 
 		//Set preferred dimensions of panels (and process bar).
-		_audioSelectPanel.setPreferredSize(new Dimension(385, 100));
-		_outputNamePanel.setPreferredSize(new Dimension(385, 140));
+		//_outputNamePanel.setPreferredSize(new Dimension(385, 140));
 
-		_bottomButtonPanel.setPreferredSize(new Dimension(385, 100));
-		_bottomSubButtonPanel.setPreferredSize(new Dimension(385, 40));
-
-		//Add and construct strip options panel.
+		//Add and construct strip panel.
 		add(_stripPanel);
 		_stripPanel.setBorder(BorderFactory.createTitledBorder("Strip Audio:"));
-		_stripPanel.setPreferredSize(new Dimension(385, 100));
+		_stripPanel.setPreferredSize(new Dimension(380, 120));
 		_stripCBoxPanel.setPreferredSize(new Dimension(260, 100));
-		
+
 		_stripPanel.add(_stripCBoxPanel, BorderLayout.CENTER);
 		_stripPanel.add(_stripButtonPanel, BorderLayout.SOUTH);
+
 		_stripCBoxPanel.add(_removeAudioOnVideo);
 		_stripCBoxPanel.add(_haveAudioOutput);
+		//_stripButton.setText("<html><center>"+"Strip Audio"+"<br>"+"From Video"+"</center></html>");
 		_stripButtonPanel.add(_stripButton);
 
-		//Add and construct audio selection panel.
-		add(_audioSelectPanel);
-		_audioSelectPanel.setBorder(BorderFactory.createTitledBorder("Audio Select:"));
-		_audioSelectPanel.add(_replaceAndOverlayLabel, BorderLayout.NORTH);
-		_audioSelectPanel.add(_audioSelectSubPanel, BorderLayout.CENTER);
+		//Add and construct replace/overlay panel.
+		add(_replaceOverlayPanel);
+		_replaceOverlayPanel.setBorder(BorderFactory.createTitledBorder("Replace / Overlay Audio:"));
+		_replaceOverlayPanel.setPreferredSize(new Dimension(385, 140));
+
+		_replaceOverlayPanel.add(_audioSelectSubPanel, BorderLayout.CENTER);
+		_replaceOverlayPanel.add(_replaceOverlayButtonPanel, BorderLayout.SOUTH);
+
 		_audioSelectSubPanel.add(_chosenAudioInput);
 		_audioSelectSubPanel.add(_audioButtonPanel);
 		_audioButtonPanel.add(_audioFileButton);
 		_audioButtonPanel.add(_audioPreviewButton);
 
+		//Set format of text on replace / overlay buttons.
+		_replaceButton.setText("<html><center>"+"Replace"+"<br>"+"Audio"+"</center></html>");
+		_overlayButton.setText("<html><center>"+"Overlay"+"<br>"+"Audio"+"</center></html>");
+
+		_replaceOverlayButtonPanel.add(_replaceButton);
+		_replaceOverlayButtonPanel.add(_overlayButton);
+
 		_chosenAudioInput.setEditable(false);
 
-		//Add and construct output naming area panel.
+		/*		//Add and construct output naming area panel.
 		add(_outputNamePanel);
 		_outputNamePanel.setBorder(BorderFactory.createTitledBorder("Output Names:"));
 		_outputNamePanel.add(_outputAudioLabel);
 		_outputNamePanel.add(_chosenAudioName);
 		_outputNamePanel.add(_outputVideoLabel);
-		_outputNamePanel.add(_chosenVideoName);
+		_outputNamePanel.add(_chosenVideoName);*/
 
-		//Add process bar.
-		//add(_processPanel);
-		//_processPanel.
+		//Add and construct process bar panel.
+		add(_processBarPanel);
+		_processBarPanel.setPreferredSize(new Dimension(385, 60));
+		_processBarPanel.add(_processBar, BorderLayout.NORTH);
+		_processBarPanel.add(_cancelButton, BorderLayout.CENTER);
+
 		_processBar.setPreferredSize(new Dimension(385, 30));
-		add(_processBar);
 		_processBar.setString("No Tasks Being Performed");
 		_processBar.setStringPainted(true);
 
-		//Add and construct function button panel.
-		add(_bottomButtonPanel);
-		_bottomButtonPanel.setBorder(BorderFactory.createTitledBorder("Audio Functions:"));
-		_bottomButtonPanel.add(_bottomSubButtonPanel, BorderLayout.NORTH);
-		_bottomButtonPanel.add(_cancelButton, BorderLayout.CENTER);
-		//_bottomSubButtonPanel.add(_stripButton);
-		_bottomSubButtonPanel.add(_replaceButton);
-		_bottomSubButtonPanel.add(_overlayButton);
+		//Set action listeners for buttons.
+		setListeners();
+	}
 
-		//Set format of text on function buttons.
-		_stripButton.setText("<html><center>"+"Strip"+"<br>"+"Audio"+"</center></html>");
-		_replaceButton.setText("<html><center>"+"Replace"+"<br>"+"Audio"+"</center></html>");
-		_overlayButton.setText("<html><center>"+"Overlay"+"<br>"+"Audio"+"</center></html>");
+	private void setListeners() {
 
 		//Add new listener to button to open up a file chooser.
 		_audioFileButton.addActionListener(new ActionListener() {
@@ -175,11 +176,6 @@ public class AudioPane extends JPanel implements ActionListener {
 			}
 		});
 
-		setListeners();
-	}
-
-	private void setListeners() {
-
 		//Add listeners to the other buttons.
 		_audioPreviewButton.addActionListener(new ActionListener() {
 
@@ -198,14 +194,29 @@ public class AudioPane extends JPanel implements ActionListener {
 		});
 
 		_stripButton.addActionListener(new  ActionListener() {
-
+			
+			SaveOutputChooser saveVideoChooser;
+			SaveOutputChooser saveAudioChooser;
+			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
-				//Use bash to check if output audio and video filenames exist.
-				String[] outputAudioExists = new BashCommand().runBash("if [ ! -f " + _chosenAudioName.getText() + " ]; then echo 0; else echo 1; fi");
-				String[] outputVideoExists = new BashCommand().runBash("if [ ! -f " + _chosenVideoName.getText() + " ]; then echo 0; else echo 1; fi");
+				if (_removeAudioOnVideo.isSelected()) {
+					saveVideoChooser = new SaveOutputChooser();
+					saveVideoChooser.setDialogTitle("Save Stripped Video");
+				}
+
+				if (_haveAudioOutput.isSelected()) {
+					saveAudioChooser = new SaveOutputChooser();
+					saveAudioChooser.setDialogTitle("Save Stripped Audio");
+				}
 				
+				//Use bash to check if output audio and video filenames exist.
+				String[] outputAudioExists = new BashCommand().runBash("if [ ! -f " + 
+						_chosenAudioName.getText() + " ]; then echo 0; else echo 1; fi");
+				String[] outputVideoExists = new BashCommand().runBash("if [ ! -f " + 
+						_chosenVideoName.getText() + " ]; then echo 0; else echo 1; fi");
+
 				/*
 				 * Series of Strip related error checking.
 				 */
@@ -216,13 +227,11 @@ public class AudioPane extends JPanel implements ActionListener {
 					JOptionPane.showMessageDialog(null, "Error: No option selected for audio " +
 							"stripping. Please select a combination from the two provided " +
 							"checkboxes.");
-
 				} 
 				//If file has no audio stream, send error.
 				else if (!PlayerPane.getInstance().hasAudioStream()) {
 					JOptionPane.showMessageDialog(null, "Error: Video has no audio stream. No " +
 							"audio can be stripped.");
-
 				} 
 				//Handle special case when both options are selected.
 				else if (_removeAudioOnVideo.isSelected() && _haveAudioOutput.isSelected()) {
@@ -265,13 +274,17 @@ public class AudioPane extends JPanel implements ActionListener {
 						canStrip = true;
 					}
 
-					//No output audio name given, send error.
-				} else if (_haveAudioOutput.isSelected() && _chosenAudioName.getText().equals("")) {
+
+				} 
+				//No output audio name given, send error.
+				else if (_haveAudioOutput.isSelected() && _chosenAudioName.getText().equals("")) {
 					JOptionPane.showMessageDialog(null, "Error: Please supply name for extracted " +
 							"audio from stripped video.");
 
-					//Output audio named already exists, ask for overwrite.
-				} else if (_haveAudioOutput.isSelected() && outputAudioExists[0].equals("1")) {
+
+				} 
+				//Output audio named already exists, ask for overwrite.
+				else if (_haveAudioOutput.isSelected() && outputAudioExists[0].equals("1")) {
 					Object[] options = { "Overwrite", "Cancel" };
 					int enableOverwrite = JOptionPane.showOptionDialog(audioPane, _chosenAudioName.getText() + " already exists. " +
 							"Overwrite file? Please choose a new filename if not overriding.", "File Already " +
@@ -281,12 +294,14 @@ public class AudioPane extends JPanel implements ActionListener {
 						canStrip = true;
 					}
 
-					//No Output video name given, send error.
-				}  else if (_removeAudioOnVideo.isSelected() && _chosenVideoName.getText().equals("")) {
+				}  
+				//No Output video name given, send error.
+				else if (_removeAudioOnVideo.isSelected() && _chosenVideoName.getText().equals("")) {
 					JOptionPane.showMessageDialog(null, "Error: Please supply name for stripped video.");
 
-					//Output video named already exists, ask for overwrite.
-				} else if (_removeAudioOnVideo.isSelected() && outputVideoExists[0].equals("1")) {
+				} 
+				//Output video named already exists, ask for overwrite.
+				else if (_removeAudioOnVideo.isSelected() && outputVideoExists[0].equals("1")) {
 					Object[] options = { "Overwrite", "Cancel" };
 					int enableOverwrite = JOptionPane.showOptionDialog(audioPane, _chosenVideoName.getText() + " already exists. " +
 							"Overwrite file? Please choose a new filename if not overriding.", "File Already " +
@@ -296,15 +311,13 @@ public class AudioPane extends JPanel implements ActionListener {
 						canStrip = true;
 					}
 
-					//Else stripping should be fine.
-				} else {
+				} 
+				//Else stripping should be fine.
+				else {
 					canStrip = true;
 				}
 
 				if (canStrip) { 
-
-					SaveOutputChooser chooser = new SaveOutputChooser();
-
 					//Set processBar to processing.
 					_processBar.setIndeterminate(true);
 					_processBar.setString("Strip In Progress");
@@ -317,9 +330,9 @@ public class AudioPane extends JPanel implements ActionListener {
 					//Disable function buttons
 					disableFunctions();
 				}
-				
+
 			}
-			
+
 		});
 		_replaceButton.addActionListener(this);
 		_overlayButton.addActionListener(this);
@@ -334,8 +347,10 @@ public class AudioPane extends JPanel implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent ae) {
 		//Use bash to check if output audio and video filenames exist.
-		String[] outputAudioExists = new BashCommand().runBash("if [ ! -f " + _chosenAudioName.getText() + " ]; then echo 0; else echo 1; fi");
-		String[] outputVideoExists = new BashCommand().runBash("if [ ! -f " + _chosenVideoName.getText() + " ]; then echo 0; else echo 1; fi");
+		String[] outputAudioExists = new BashCommand().runBash("if [ ! -f " + 
+				_chosenAudioName.getText() + " ]; then echo 0; else echo 1; fi");
+		String[] outputVideoExists = new BashCommand().runBash("if [ ! -f " + 
+				_chosenVideoName.getText() + " ]; then echo 0; else echo 1; fi");
 
 		//If cancel is pressed:
 		if (ae.getSource() == _cancelButton) {
