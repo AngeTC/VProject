@@ -35,7 +35,9 @@ class ExtractWorker extends SwingWorker<Void, Void> {
 	@Override
 	protected Void doInBackground() throws Exception {
 
-		ProcessBuilder builder = new ProcessBuilder("avconv", "-y", "-i", _video.getAbsolutePath(), "-map", "0:a", "-strict", "experimental", this.audioPane._chosenAudioName.getText() + ".mp3");
+		ProcessBuilder builder = new ProcessBuilder("avconv", "-y", "-i", _video.getAbsolutePath(), 
+				"-map", "0:a", "-strict", "experimental", this.audioPane.saveAudioChooser.getSavePath() 
+				+ ".mp3");
 		try {		
 			//Create and run new process for avconv.
 			builder.redirectErrorStream(true);
@@ -57,6 +59,7 @@ class ExtractWorker extends SwingWorker<Void, Void> {
 					//Else, add line to the output list.
 				} else {
 					extractOutput.add(line);
+					System.out.println(line);
 				}
 			}
 

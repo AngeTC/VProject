@@ -39,15 +39,17 @@ class OverlayWorker extends SwingWorker<Void, Void> {
 	@Override
 	protected Void doInBackground() throws Exception {
 		ProcessBuilder builder;
-		
-		//TODO need to get extension of output to equal extension of video input.
 
 		//Set default process as overlaying.
-		builder = new ProcessBuilder("avconv", "-y", "-i", _video.getAbsolutePath(), "-i", _audio.getAbsolutePath(), "-filter_complex", "amix=inputs=2", "-strict", "experimental", this.audioPane._chosenVideoName.getText() + ".mp4");
+		builder = new ProcessBuilder("avconv", "-y", "-i", _video.getAbsolutePath(), 
+				"-i", _audio.getAbsolutePath(), "-filter_complex", "amix=inputs=2", 
+				"-strict", "experimental", this.audioPane.saveVideoChooser.getSavePath() + ".mp4");
 
 		//If replace is to be done, switch to other process.
 		if (_replaceSelected) {
-			builder = new ProcessBuilder("avconv", "-y", "-i", _video.getAbsolutePath(), "-i", _audio.getAbsolutePath(), "-c:v", "copy", "-c:a", "copy", "-map", "0:0", "-map", "1:a", this.audioPane._chosenVideoName.getText() + ".mp4");
+			builder = new ProcessBuilder("avconv", "-y", "-i", _video.getAbsolutePath(), 
+					"-i", _audio.getAbsolutePath(), "-c:v", "copy", "-c:a", "copy", "-map", "0:0", 
+					"-map", "1:a", this.audioPane.saveVideoChooser.getSavePath() + ".mp4");
 		}
 
 		try {
@@ -74,6 +76,7 @@ class OverlayWorker extends SwingWorker<Void, Void> {
 					//Else, add line to the output list.
 				} else {
 					avconvOutput.add(line);
+					System.out.println(line);
 				}
 			}
 
@@ -120,6 +123,8 @@ class OverlayWorker extends SwingWorker<Void, Void> {
 			//Enable function buttons.
 			this.audioPane.enableFunctions();
 
-		} catch (InterruptedException e) {}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 }

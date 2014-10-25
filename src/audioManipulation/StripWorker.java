@@ -48,11 +48,13 @@ class StripWorker extends SwingWorker<Void, Void> {
 				//Extract and remove audio from video:
 				this.audioPane._eW = new ExtractWorker(this.audioPane, _video);
 				this.audioPane._eW.execute();
-				builder = new ProcessBuilder("avconv", "-y", "-i", _video.getAbsolutePath(), "-an", this.audioPane._chosenVideoName.getText() + ".mp4");
+				builder = new ProcessBuilder("avconv", "-y", "-i", _video.getAbsolutePath(), "-an", 
+						this.audioPane.saveVideoChooser.getSavePath() + ".mp4");
 
 			} else {
 				//Remove audio from video only:
-				builder = new ProcessBuilder("avconv", "-y", "-i", _video.getAbsolutePath(), "-an", this.audioPane._chosenVideoName.getText() + ".mp4");
+				builder = new ProcessBuilder("avconv", "-y", "-i", _video.getAbsolutePath(), "-an", 
+						this.audioPane.saveVideoChooser.getSavePath() + ".mp4");
 			}
 		
 		//Else audio should not be removed:

@@ -34,7 +34,7 @@ import vlcPlayer.PlayerPane;
  *(Add word wrapping in JButton Text.)
  */
 @SuppressWarnings("serial")
-public class AudioPane extends JPanel implements ActionListener {
+public class AudioPane extends JPanel {
 
 	private final AudioPane audioPane = this;
 
@@ -52,7 +52,7 @@ public class AudioPane extends JPanel implements ActionListener {
 	//private final JLabel _outputAudioLabel = new JLabel("Output Audio Name: (For Stripping) ");
 	//private final JLabel _outputVideoLabel = new JLabel("Output Video Name: (For All Functions)");
 
-	private final JTextField _chosenAudioInput = new JTextField(25);
+	private final JTextField _chosenAudioInput = new JTextField(28);
 	final JTextField _chosenVideoName = new JTextField(25);
 	final JTextField _chosenAudioName = new JTextField(25);
 
@@ -72,6 +72,9 @@ public class AudioPane extends JPanel implements ActionListener {
 	StripWorker _sW;
 	private OverlayWorker _oW;
 
+	SaveOutputChooser saveVideoChooser;
+	SaveOutputChooser saveAudioChooser;
+
 	private File _selectedAudio;
 	private File _currentWorkingVideo;
 
@@ -79,9 +82,6 @@ public class AudioPane extends JPanel implements ActionListener {
 
 		//Set layout.
 		setLayout(new FlowLayout());
-
-		//Set preferred dimensions of panels (and process bar).
-		//_outputNamePanel.setPreferredSize(new Dimension(385, 140));
 
 		//Add and construct strip panel.
 		add(_stripPanel);
@@ -94,13 +94,12 @@ public class AudioPane extends JPanel implements ActionListener {
 
 		_stripCBoxPanel.add(_removeAudioOnVideo);
 		_stripCBoxPanel.add(_haveAudioOutput);
-		//_stripButton.setText("<html><center>"+"Strip Audio"+"<br>"+"From Video"+"</center></html>");
 		_stripButtonPanel.add(_stripButton);
 
 		//Add and construct replace/overlay panel.
 		add(_replaceOverlayPanel);
 		_replaceOverlayPanel.setBorder(BorderFactory.createTitledBorder("Replace / Overlay Audio:"));
-		_replaceOverlayPanel.setPreferredSize(new Dimension(385, 140));
+		_replaceOverlayPanel.setPreferredSize(new Dimension(380, 140));
 
 		_replaceOverlayPanel.add(_audioSelectSubPanel, BorderLayout.CENTER);
 		_replaceOverlayPanel.add(_replaceOverlayButtonPanel, BorderLayout.SOUTH);
@@ -119,14 +118,6 @@ public class AudioPane extends JPanel implements ActionListener {
 
 		_chosenAudioInput.setEditable(false);
 
-		/*		//Add and construct output naming area panel.
-		add(_outputNamePanel);
-		_outputNamePanel.setBorder(BorderFactory.createTitledBorder("Output Names:"));
-		_outputNamePanel.add(_outputAudioLabel);
-		_outputNamePanel.add(_chosenAudioName);
-		_outputNamePanel.add(_outputVideoLabel);
-		_outputNamePanel.add(_chosenVideoName);*/
-
 		//Add and construct process bar panel.
 		add(_processBarPanel);
 		_processBarPanel.setPreferredSize(new Dimension(385, 60));
@@ -143,7 +134,8 @@ public class AudioPane extends JPanel implements ActionListener {
 
 	private void setListeners() {
 
-		//Add new listener to button to open up a file chooser.
+		//Add listeners to the buttons:
+
 		_audioFileButton.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent ae) {
@@ -159,7 +151,6 @@ public class AudioPane extends JPanel implements ActionListener {
 					try {
 						type = Files.probeContentType(selectedFile.toPath());
 						//If the selected file is an audio file:
-						System.out.println(type);
 						if(type.contains("audio")) {
 							//Set it as new selected audio.
 							_selectedAudio = selectedFile;
@@ -176,7 +167,6 @@ public class AudioPane extends JPanel implements ActionListener {
 			}
 		});
 
-		//Add listeners to the other buttons.
 		_audioPreviewButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -186,7 +176,6 @@ public class AudioPane extends JPanel implements ActionListener {
 					JOptionPane.showMessageDialog(null, "Error: No audio selected to replace / " +
 							"overlay with. Please select an audio file using the button above.");
 
-					//If preview button, begin preview on main player.
 				} else {
 					PlayerPane.getInstance().tempPlay(_selectedAudio.getAbsolutePath());
 				}
@@ -194,28 +183,38 @@ public class AudioPane extends JPanel implements ActionListener {
 		});
 
 		_stripButton.addActionListener(new  ActionListener() {
-			
-			SaveOutputChooser saveVideoChooser;
-			SaveOutputChooser saveAudioChooser;
-			
+
+			String[] outputAudioExists;
+			String[] outputVideoExists;
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 
+				//Check to see of there is an editable video playing.
+				if (PlayerPane.getInstance().getMediaPath().equals("")) {
+					JOptionPane.showMessageDialog(null, "Error: No video to edit. Please select a file by " +
+							"playing one using the Open button.");
+					return;
+				}
+
+				//Open new save choosers for asking for audio and / or video output name(s).
 				if (_removeAudioOnVideo.isSelected()) {
 					saveVideoChooser = new SaveOutputChooser();
 					saveVideoChooser.setDialogTitle("Save Stripped Video");
+
+					//Use bash to check if output video already exists.
+					outputVideoExists = new BashCommand().runBash("if [ ! -f " + 
+							saveVideoChooser.getSavePath() + ".mp4" + " ]; then echo 0; else echo 1; fi");
 				}
 
 				if (_haveAudioOutput.isSelected()) {
 					saveAudioChooser = new SaveOutputChooser();
 					saveAudioChooser.setDialogTitle("Save Stripped Audio");
+
+					//Use bash to check if output audio already exists.
+					outputAudioExists = new BashCommand().runBash("if [ ! -f " + 
+							saveAudioChooser.getSavePath() + ".mp3" + " ]; then echo 0; else echo 1; fi");
 				}
-				
-				//Use bash to check if output audio and video filenames exist.
-				String[] outputAudioExists = new BashCommand().runBash("if [ ! -f " + 
-						_chosenAudioName.getText() + " ]; then echo 0; else echo 1; fi");
-				String[] outputVideoExists = new BashCommand().runBash("if [ ! -f " + 
-						_chosenVideoName.getText() + " ]; then echo 0; else echo 1; fi");
 
 				/*
 				 * Series of Strip related error checking.
@@ -228,24 +227,28 @@ public class AudioPane extends JPanel implements ActionListener {
 							"stripping. Please select a combination from the two provided " +
 							"checkboxes.");
 				} 
+
 				//If file has no audio stream, send error.
 				else if (!PlayerPane.getInstance().hasAudioStream()) {
 					JOptionPane.showMessageDialog(null, "Error: Video has no audio stream. No " +
 							"audio can be stripped.");
 				} 
-				//Handle special case when both options are selected.
+				/*
+				 *	Handle special case when both options are selected:
+				 */
+
 				else if (_removeAudioOnVideo.isSelected() && _haveAudioOutput.isSelected()) {
 					boolean validAudio = true;
 					boolean validVideo = true;
 
 					//If no output audio name is specified, send error.
-					if (_chosenAudioName.getText().equals("")) {
+					if (saveAudioChooser.getSavePath().equals("")) {
 						JOptionPane.showMessageDialog(null, "Error: Please supply name for extracted " +
 								"audio from stripped video.");
 						validAudio = false;
 
 						//If no output video name is specified, send error.
-					} else if (_chosenVideoName.getText().equals("")) {
+					} else if (saveVideoChooser.getSavePath().equals("")) {
 						JOptionPane.showMessageDialog(null, "Error: Please supply name for output " +
 								"video.");
 						validVideo = false;
@@ -254,15 +257,23 @@ public class AudioPane extends JPanel implements ActionListener {
 						//Ask to overwrite if audio name already exists.
 						if (outputAudioExists[0].equals("1")) {
 							Object[] options = { "Overwrite", "Cancel" };
-							int enableOverwrite = JOptionPane.showOptionDialog(audioPane, _chosenAudioName.getText() + " already exists. Overwrite file? Please choose a new filename if not overriding.", "File Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+							int enableOverwrite = JOptionPane.showOptionDialog(audioPane, saveAudioChooser.getSavePath() + ".mp3"
+									+ " already exists. Overwrite file? Please choose a new filename if not overriding.", 
+									"File Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, 
+									options, options[0]);
 							if (enableOverwrite == 1) {
 								validAudio = false;
 							}
 
-							//Ask to overwrite if video name already exists.
-						} else if (outputVideoExists[0].equals("1")) {
+
+						} 
+						//Ask to overwrite if video name already exists.
+						else if (outputVideoExists[0].equals("1")) {
 							Object[] options = { "Overwrite", "Cancel" };
-							int enableOverwrite = JOptionPane.showOptionDialog(audioPane, _chosenVideoName.getText() + " already exists. Overwrite file? Please choose a new filename if not overriding.", "File Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+							int enableOverwrite = JOptionPane.showOptionDialog(audioPane, saveVideoChooser.getSavePath() + ".mp4"
+									+ " already exists. Overwrite file? Please choose a new filename if not overriding.", 
+									"File Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, 
+									options, options[0]);
 							if (enableOverwrite == 1) {
 								validVideo = false;
 							}
@@ -273,20 +284,22 @@ public class AudioPane extends JPanel implements ActionListener {
 					if (validAudio && validVideo) {
 						canStrip = true;
 					}
-
-
 				} 
+
+				/*
+				 *	Else just handle one option being selected:
+				 */
+
 				//No output audio name given, send error.
-				else if (_haveAudioOutput.isSelected() && _chosenAudioName.getText().equals("")) {
+				else if (_haveAudioOutput.isSelected() && saveAudioChooser.getSavePath().equals("")) {
 					JOptionPane.showMessageDialog(null, "Error: Please supply name for extracted " +
 							"audio from stripped video.");
-
 
 				} 
 				//Output audio named already exists, ask for overwrite.
 				else if (_haveAudioOutput.isSelected() && outputAudioExists[0].equals("1")) {
 					Object[] options = { "Overwrite", "Cancel" };
-					int enableOverwrite = JOptionPane.showOptionDialog(audioPane, _chosenAudioName.getText() + " already exists. " +
+					int enableOverwrite = JOptionPane.showOptionDialog(audioPane, saveAudioChooser.getSavePath() + ".mp3" + " already exists. " +
 							"Overwrite file? Please choose a new filename if not overriding.", "File Already " +
 									"Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
@@ -296,14 +309,14 @@ public class AudioPane extends JPanel implements ActionListener {
 
 				}  
 				//No Output video name given, send error.
-				else if (_removeAudioOnVideo.isSelected() && _chosenVideoName.getText().equals("")) {
+				else if (_removeAudioOnVideo.isSelected() && saveVideoChooser.getSavePath().equals("")) {
 					JOptionPane.showMessageDialog(null, "Error: Please supply name for stripped video.");
 
 				} 
 				//Output video named already exists, ask for overwrite.
 				else if (_removeAudioOnVideo.isSelected() && outputVideoExists[0].equals("1")) {
 					Object[] options = { "Overwrite", "Cancel" };
-					int enableOverwrite = JOptionPane.showOptionDialog(audioPane, _chosenVideoName.getText() + " already exists. " +
+					int enableOverwrite = JOptionPane.showOptionDialog(audioPane, saveVideoChooser.getSavePath() + ".mp4" + " already exists. " +
 							"Overwrite file? Please choose a new filename if not overriding.", "File Already " +
 									"Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
@@ -330,189 +343,53 @@ public class AudioPane extends JPanel implements ActionListener {
 					//Disable function buttons
 					disableFunctions();
 				}
-
 			}
-
 		});
-		_replaceButton.addActionListener(this);
-		_overlayButton.addActionListener(this);
-		_cancelButton.addActionListener(this);
-	}
 
-	/**
-	 * Method explaining actions performed depending on
-	 * which button is pressed and a series of error
-	 * checking.
-	 */
-	@Override
-	public void actionPerformed(ActionEvent ae) {
-		//Use bash to check if output audio and video filenames exist.
-		String[] outputAudioExists = new BashCommand().runBash("if [ ! -f " + 
-				_chosenAudioName.getText() + " ]; then echo 0; else echo 1; fi");
-		String[] outputVideoExists = new BashCommand().runBash("if [ ! -f " + 
-				_chosenVideoName.getText() + " ]; then echo 0; else echo 1; fi");
+		_replaceButton.addActionListener(new ActionListener() {
 
-		//If cancel is pressed:
-		if (ae.getSource() == _cancelButton) {
-			//Cancel all workers available.
-			if (_sW != null) {
-				_sW.cancel(true);
-			}
-			if (_eW != null) {
-				_eW.cancel(true);
-			}
-			if (_oW != null) {
-				_oW.cancel(true);
-			}
+			String[] outputVideoExists;
 
-			//Check to see of there is an editable video to use.
-		} else if (PlayerPane.getInstance().getMediaPath().equals("")) {
-			JOptionPane.showMessageDialog(null, "Error: No video to edit. Please select a file by " +
-					"playing one using the Open button or using the 'Files' " +
-					"tab on the right.");
+			@Override
+			public void actionPerformed(ActionEvent e) {
 
-			//If Strip button is pressed:
-		} else if (ae.getSource() == _stripButton) {
-			/*
-			 * Series of Strip related error checking.
-			 */
-			boolean canStrip = false;
-
-			//Send error if no option for strip is chosen.
-			if (!_removeAudioOnVideo.isSelected() && !_haveAudioOutput.isSelected()) {
-				JOptionPane.showMessageDialog(null, "Error: No option selected for audio " +
-						"stripping. Please select a combination from the two provided " +
-						"checkboxes.");
-
-			} 
-			//If file has no audio stream, send error.
-			else if (!PlayerPane.getInstance().hasAudioStream()) {
-				JOptionPane.showMessageDialog(null, "Error: Video has no audio stream. No " +
-						"audio can be stripped.");
-
-			} 
-			//Handle special case when both options are selected.
-			else if (_removeAudioOnVideo.isSelected() && _haveAudioOutput.isSelected()) {
-				boolean validAudio = true;
-				boolean validVideo = true;
-
-				//If no output audio name is specified, send error.
-				if (_chosenAudioName.getText().equals("")) {
-					JOptionPane.showMessageDialog(null, "Error: Please supply name for extracted " +
-							"audio from stripped video.");
-					validAudio = false;
-
-					//If no output video name is specified, send error.
-				} else if (_chosenVideoName.getText().equals("")) {
-					JOptionPane.showMessageDialog(null, "Error: Please supply name for output " +
-							"video.");
-					validVideo = false;
-
-				} else {
-					//Ask to overwrite if audio name already exists.
-					if (outputAudioExists[0].equals("1")) {
-						Object[] options = { "Overwrite", "Cancel" };
-						int enableOverwrite = JOptionPane.showOptionDialog(this, _chosenAudioName.getText() + " already exists. Overwrite file? Please choose a new filename if not overriding.", "File Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-						if (enableOverwrite == 1) {
-							validAudio = false;
-						}
-
-						//Ask to overwrite if video name already exists.
-					} else if (outputVideoExists[0].equals("1")) {
-						Object[] options = { "Overwrite", "Cancel" };
-						int enableOverwrite = JOptionPane.showOptionDialog(this, _chosenVideoName.getText() + " already exists. Overwrite file? Please choose a new filename if not overriding.", "File Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-						if (enableOverwrite == 1) {
-							validVideo = false;
-						}
-					}
+				//Check to see of there is an editable video playing.
+				if (PlayerPane.getInstance().getMediaPath().equals("")) {
+					JOptionPane.showMessageDialog(null, "Error: No video to edit. Please select a file by " +
+							"playing one using the Open button.");
+					return;
 				}
 
-				//If both audio and video are valid, proceed to strip.
-				if (validAudio && validVideo) {
-					canStrip = true;
+				//If no audio selected, send error.
+				if (_selectedAudio == null) {
+					JOptionPane.showMessageDialog(null, "Error: No audio selected to replace / " +
+							"overlay with. Please select an audio file using the button above.");
+					return;
 				}
 
-				//No output audio name given, send error.
-			} else if (_haveAudioOutput.isSelected() && _chosenAudioName.getText().equals("")) {
-				JOptionPane.showMessageDialog(null, "Error: Please supply name for extracted " +
-						"audio from stripped video.");
+				//Open new save chooser for video output name.
+				saveVideoChooser = new SaveOutputChooser();
+				saveVideoChooser.setDialogTitle("Save Replaced Audio Video");
 
-				//Output audio named already exists, ask for overwrite.
-			} else if (_haveAudioOutput.isSelected() && outputAudioExists[0].equals("1")) {
-				Object[] options = { "Overwrite", "Cancel" };
-				int enableOverwrite = JOptionPane.showOptionDialog(this, _chosenAudioName.getText() + " already exists. " +
-						"Overwrite file? Please choose a new filename if not overriding.", "File Already " +
-								"Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+				//Use bash to check if output video already exists.
+				outputVideoExists = new BashCommand().runBash("if [ ! -f " + 
+						saveVideoChooser.getSavePath() + ".mp4" + " ]; then echo 0; else echo 1; fi");
 
-				if (enableOverwrite == 0) {
-					canStrip = true;
-				}
-
-				//No Output video name given, send error.
-			}  else if (_removeAudioOnVideo.isSelected() && _chosenVideoName.getText().equals("")) {
-				JOptionPane.showMessageDialog(null, "Error: Please supply name for stripped video.");
-
-				//Output video named already exists, ask for overwrite.
-			} else if (_removeAudioOnVideo.isSelected() && outputVideoExists[0].equals("1")) {
-				Object[] options = { "Overwrite", "Cancel" };
-				int enableOverwrite = JOptionPane.showOptionDialog(this, _chosenVideoName.getText() + " already exists. " +
-						"Overwrite file? Please choose a new filename if not overriding.", "File Already " +
-								"Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-
-				if (enableOverwrite == 0) {
-					canStrip = true;
-				}
-
-				//Else stripping should be fine.
-			} else {
-				canStrip = true;
-			}
-
-			if (canStrip) { 
-
-				SaveOutputChooser chooser = new SaveOutputChooser();
-
-				//Set processBar to processing.
-				_processBar.setIndeterminate(true);
-				_processBar.setString("Strip In Progress");
-
-				//Start new StripWorker.
-				_currentWorkingVideo = new File(PlayerPane.getInstance().getMediaPath());
-				_sW = new StripWorker(this, _removeAudioOnVideo.isSelected(), _haveAudioOutput.isSelected(), _currentWorkingVideo);
-				_sW.execute();
-
-				//Disable function buttons
-				disableFunctions();
-			}
-
-		} else {
-
-			//Must be related to replace and overlay functionality.
-
-			//If no audio selected, send error.
-			if (_selectedAudio == null) {
-				JOptionPane.showMessageDialog(null, "Error: No audio selected to replace / " +
-						"overlay with. Please select an audio file using the button above.");
-
-				//If preview button, begin preview on main player.
-			} else if (ae.getSource() == _audioPreviewButton) {
-				PlayerPane.getInstance().tempPlay(_selectedAudio.getAbsolutePath());
-
-				//If no output video name specified, send error.
-			} else if (_chosenVideoName.getText().equals("")) {
-				JOptionPane.showMessageDialog(null, "Error: Please supply name for output " +
-						"video.");
-
-				//If replace button:
-			} else if (ae.getSource() == _replaceButton) {
 				boolean canReplace = false;
+				
+				//Send error if no file name given.
+				if (saveVideoChooser.getSavePath().equals("")) {
+					JOptionPane.showMessageDialog(null, "Error: Please supply name for output video.");
+					return;
+				}
 
 				//Ask for overwrite if output video file already exists.
 				if (outputVideoExists[0].equals("1")) {
 					Object[] options = { "Overwrite", "Cancel" };
-					int enableOverwrite = JOptionPane.showOptionDialog(this, _chosenVideoName.getText() + " already " +
-							"exists. Overwrite file? Please choose a new filename if not overriding.", "File " +
+					int enableOverwrite = JOptionPane.showOptionDialog(audioPane, saveVideoChooser.getSavePath() + ".mp4" + 
+							" already exists. Overwrite file? Please choose a new filename if not overriding.", "File " +
 									"Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+
 					if (enableOverwrite == 0) {
 						canReplace = true;
 					}
@@ -528,29 +405,65 @@ public class AudioPane extends JPanel implements ActionListener {
 
 					//Start new OverlayWorker to replace.
 					_currentWorkingVideo = new File(PlayerPane.getInstance().getMediaPath());
-					_oW = new OverlayWorker(this, true, _selectedAudio, _currentWorkingVideo);
+					_oW = new OverlayWorker(audioPane, true, _selectedAudio, _currentWorkingVideo);
 					_oW.execute();
 
 					//Disable function buttons
 					disableFunctions();
 				}
+			}
+		});
 
-			} else if (ae.getSource() == _overlayButton) {
+		_overlayButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String[] outputVideoExists;
+
+				//Check to see of there is an editable video playing.
+				if (PlayerPane.getInstance().getMediaPath().equals("")) {
+					JOptionPane.showMessageDialog(null, "Error: No video to edit. Please select a file by " +
+							"playing one using the Open button.");
+					return;
+				}
+
+				//If no audio selected, send error.
+				if (_selectedAudio == null) {
+					JOptionPane.showMessageDialog(null, "Error: No audio selected to replace / " +
+							"overlay with. Please select an audio file using the button above.");
+					return;
+				}
+
+				//Open new save chooser for video output name.
+				saveVideoChooser = new SaveOutputChooser();
+				saveVideoChooser.setDialogTitle("Save Overlayed Audio Video");
+
+				//Use bash to check if output video already exists.
+				outputVideoExists = new BashCommand().runBash("if [ ! -f " + 
+						saveVideoChooser.getSavePath() + ".mp4" + " ]; then echo 0; else echo 1; fi");
+
 				boolean canOverlay = false;
 
+				//Send error if no file name given.
+				if (saveVideoChooser.getSavePath().equals("")) {
+					JOptionPane.showMessageDialog(null, "Error: Please supply name for output video.");
+					return;
+				}
+				
 				//Ask for overwrite if output video file already exists.
-				if (outputVideoExists[0].equals("1")) {
+				if (outputVideoExists[0].equals("1") && !saveVideoChooser.getSavePath().equals("")) {
 					Object[] options = { "Overwrite", "Cancel" };
-					int enableOverwrite = JOptionPane.showOptionDialog(this, _chosenVideoName.getText() + " already " +
-							"exists. Overwrite file? Please choose a new filename if not overriding.", "File " +
+					int enableOverwrite = JOptionPane.showOptionDialog(audioPane, saveVideoChooser.getSavePath() + ".mp4" 
+							+ " already exists. Overwrite file? Please choose a new filename if not overriding.", "File " +
 									"Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+
 					if (enableOverwrite == 0) {
 						canOverlay = true;
 					}
 				} else {
-					//Else overlay is fine.
+					//Else replace is fine.
 					canOverlay = true;
-				}
+				}	
 
 				if (canOverlay) {
 					//Set processBar to processing.
@@ -559,14 +472,31 @@ public class AudioPane extends JPanel implements ActionListener {
 
 					//Start new OverlayWorker to overlay.
 					_currentWorkingVideo = new File(PlayerPane.getInstance().getMediaPath());
-					_oW = new OverlayWorker(this, false, _selectedAudio, _currentWorkingVideo);
+					_oW = new OverlayWorker(audioPane, false, _selectedAudio, _currentWorkingVideo);
 					_oW.execute();
 
 					//Disable function buttons
 					disableFunctions();
 				}
 			}
-		} 
+		});
+
+		_cancelButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//Cancel all workers available.
+				if (_sW != null) {
+					_sW.cancel(true);
+				}
+				if (_eW != null) {
+					_eW.cancel(true);
+				}
+				if (_oW != null) {
+					_oW.cancel(true);
+				}
+			}
+		});
 	}
 
 	/**

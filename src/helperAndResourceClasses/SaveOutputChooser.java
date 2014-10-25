@@ -15,7 +15,6 @@ import javax.swing.JFileChooser;
 public class SaveOutputChooser extends JFileChooser {
 	
 	String _saveFilePath = "";
-	String _saveFileName = "";
 	
 	public SaveOutputChooser() {
 		setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
