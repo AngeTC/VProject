@@ -1,7 +1,7 @@
 package vamixUI;
 import fileDirectoryPane.DirPane;
 import helperAndResourceClasses.DownloadHandler;
-import helperAndResourceClasses.FileChooseButton;
+import helperAndResourceClasses.PlayFileChooseButton;
 import helperAndResourceClasses.ResImage;
 
 import java.awt.BorderLayout;
@@ -25,6 +25,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -61,7 +63,7 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 	private JPanel _leftPanel = new JPanel();
 
 	private JPanel _topButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT,0,0));
-	private JButton _fileButton = new FileChooseButton("Open File");
+	private JButton _fileButton = new PlayFileChooseButton("Open File");
 	private JButton _downloadButton = new JButton("Download");
 
 	private JPanel _botButtonPanel = new JPanel();
@@ -378,19 +380,24 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 		_seekBar.setNewTotalLength(totalPlayTime);
 		_playerPanel.setPlayTime(totalPlayTime);
 	}
+	
+	/**
+	 * Returns the current time from the time label.
+	 * 
+	 * Used by SubtitlePane to set new start and end 
+	 * times.
+	 * 
+	 * @return
+	 */
+	public String getCurrentTime() {
+		return _timeLabel.getText();
+	}
 
 	/**
 	 * Main method to start running the GUI.
 	 * @param args
 	 */
 	public static void main(String[] args){
-		// Set look and feel of GUI. TODO
-//		try {
-//			UIManager.setLookAndFeel("com.sun.java.swing.plaf.gtk.GTKLookAndFeel");
-//		} catch (ClassNotFoundException | InstantiationException
-//				| IllegalAccessException | UnsupportedLookAndFeelException e1) {
-//			JOptionPane.showMessageDialog(null, "Error: " + e1.getMessage());
-//		}
 		
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -399,10 +406,4 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 			}
 		});
 	}
-
-	public String getCurrentTime() {
-		return _timeLabel.getText();
-	}
 }
-
-

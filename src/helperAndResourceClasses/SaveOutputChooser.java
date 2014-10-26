@@ -17,18 +17,24 @@ public class SaveOutputChooser extends JFileChooser {
 	
 	String _saveFilePath = "";
 	
+	/**
+	 * Constructor for SaveOutputChooser.
+	 */
 	public SaveOutputChooser() {
-		setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		
 		int selection = this.showSaveDialog(null);
 		
 		if (selection == JFileChooser.APPROVE_OPTION) {
 			File fileToSave = this.getSelectedFile();
-		    System.out.println("Save as file: " + fileToSave.getAbsolutePath());
 		    _saveFilePath = fileToSave.getAbsolutePath();
 		}
 	}
 	
+	/**
+	 * Returns the specified file path for the file 
+	 * to save.
+	 * @return
+	 */
 	public String getSavePath() {
 		return _saveFilePath;
 	}

@@ -44,51 +44,47 @@ import vlcPlayer.PlayerPane;
  */
 @SuppressWarnings("serial")
 public class TextPane extends JPanel {
-	// Main sections
-	private JPanel _textAndChangesPanel = new JPanel();
-	private JPanel _addTextPanel = new JPanel();
-	private JPanel _changesPanel = new JPanel();
-	private JPanel _buttonPanel = new JPanel();
-
-	// Sub sections
+	// Main Sections:
+	private final JPanel _textAndChangesPanel = new JPanel();
+	private final JPanel _addTextPanel = new JPanel();
+	private final JPanel _changesPanel = new JPanel();
+	private final JPanel _buttonPanel = new JPanel();
 	private final JPanel _textOptionPanel = new JPanel();
-	private final JPanel _imageAndConfirmPanel = new JPanel();
+	private final JPanel _addAndDeletePanel = new JPanel();
 	private final JPanel _confirmationPanel = new JPanel();
 	private final JPanel _spinnerPanel1 = new JPanel();
 	private final JPanel _spinnerPanel2 = new JPanel();
 	private final JPanel _fontAndColourPanel = new JPanel();
 	private final JPanel _tableButtonsPanel = new JPanel();
-	private final JPanel _editAndDeletePanel = new JPanel();
+	private final JPanel _exportPanel = new JPanel();
 	private final JPanel _progressAndButtonPanel = new JPanel(new BorderLayout());
 
-	// Button panel
 	private final JButton _loadButton = new JButton("Load data");
 	private final JButton _saveButton = new JButton("Save data");
-
-	// Add text panel components
-
-	// Text section
-	private final JTextArea _textInput = new JTextArea("Type a caption to add...");
-	private final JScrollPane _textScroll = new JScrollPane(_textInput);
 	private final JButton _fontButton = new JButton("Font");
 	private final JButton _colourButton = new JButton("Colour");
+	private final JButton _chooseVideoButton = new JButton("Choose");
+	private final JButton _addButton = new JButton("Add Caption");
+	private final JButton _exportingButton = new JButton("Add Selected Text");
+	private final JButton _deleteButton = new JButton("Delete Caption");
+	private final JButton _cancelButton = new JButton("Cancel");
+	
+	private final JTextField _textInput = new JTextField("Type a caption to add...");
+	private final JScrollPane _textScroll = new JScrollPane(_textInput);
+
 	private final JLabel _durationLabel1 = new JLabel("Start (hh:mm:ss)");
-	private final JSpinner _hoursSpinner1 = new JSpinner(new SpinnerNumberModel(00, 00, 99, 1));
-	private final JSpinner _minsSpinner1 = new JSpinner(new SpinnerNumberModel(00, 00, 59, 1));
-	private final JSpinner _secsSpinner1 = new JSpinner(new SpinnerNumberModel(00, 00, 59, 1));
 	private final JLabel _timeSep1 = new JLabel(":");
 	private final JLabel _timeSep2 = new JLabel(":");
 	private final JLabel _durationLabel2 = new JLabel("End (hh:mm:ss)  ");
-	private final JSpinner _hoursSpinner2 = new JSpinner(new SpinnerNumberModel(00, 00, 99, 1));
-	private final JSpinner _minsSpinner2 = new JSpinner(new SpinnerNumberModel(00, 00, 59, 1));
-	private final JSpinner _secsSpinner2 = new JSpinner(new SpinnerNumberModel(05, 00, 59, 1));
 	private final JLabel _timeSep3 = new JLabel(":");
 	private final JLabel _timeSep4 = new JLabel(":");
 
-	private final JTextField _inputVideo = new JTextField("Pick a video to add text to.", 16);
-	private final JButton _chooseVideoButton = new JButton("Choose");
-
-	private final JButton _addButton = new JButton("Add Caption");
+	private final JSpinner _hoursSpinner1 = new JSpinner(new SpinnerNumberModel(00, 00, 99, 1));
+	private final JSpinner _minsSpinner1 = new JSpinner(new SpinnerNumberModel(00, 00, 59, 1));
+	private final JSpinner _secsSpinner1 = new JSpinner(new SpinnerNumberModel(00, 00, 59, 1));
+	private final JSpinner _hoursSpinner2 = new JSpinner(new SpinnerNumberModel(00, 00, 99, 1));
+	private final JSpinner _minsSpinner2 = new JSpinner(new SpinnerNumberModel(00, 00, 59, 1));
+	private final JSpinner _secsSpinner2 = new JSpinner(new SpinnerNumberModel(05, 00, 59, 1));
 
 	final JProgressBar _progressBar = new JProgressBar();
 	
@@ -105,9 +101,7 @@ public class TextPane extends JPanel {
 	};
 	private final JTable _captionsTable = new JTable(_tableModel);
 	private final JScrollPane _tableScrollPane = new JScrollPane(_captionsTable);
-	private final JButton _exportingButton = new JButton("Add Selected Text");
-	private final JButton _deleteButton = new JButton("Delete Caption");
-	private final JButton _cancelButton = new JButton("Cancel");
+
 
 	//Default font, size and color.
 	private String _fontPath = "/usr/share/fonts/truetype/freefont/FreeSans.ttf";
@@ -124,37 +118,40 @@ public class TextPane extends JPanel {
 	 * Constructor for TextPane.
 	 */
 	public TextPane() {
+		
+		//Set layout.
 		setLayout(new BorderLayout());
-		// button and video, NORTH
+		
+		//Add and construct panel for save and load buttons.
 		JPanel videoAndButtons = new JPanel();
 		videoAndButtons.setLayout(new GridLayout(2,0));
 		_buttonPanel.setLayout(new GridLayout(1,0));
 		_buttonPanel.add(_loadButton);
 		_buttonPanel.add(_saveButton);
-		_inputVideo.setEditable(false);
 		videoAndButtons.add(_buttonPanel);
 		add(videoAndButtons, BorderLayout.NORTH);
 
-		// add text panel and changes panel, CENTRE
+		//Add and construct text field and font buttons panel.
 		_textAndChangesPanel.setLayout(new GridLayout(2,0));
-		//*****ADD TEXT PANEL******
 		_addTextPanel.setLayout(new BorderLayout());
-		// Text options
 		_textOptionPanel.setLayout(new BorderLayout());
 		_textOptionPanel.add(_textScroll, BorderLayout.CENTER);
 		_fontAndColourPanel.setLayout(new GridLayout(0,1));
-		new JPanel();
-		GraphicsEnvironment e = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		Font[] fonts = e.getAllFonts();
-		Vector<String> allFonts = new Vector<String>();
-		for (Font f : fonts) {
-			allFonts.add(f.getName());
-		}
+//		//new JPanel(); TODO
+//		
+//		//Get all 
+//		GraphicsEnvironment e = GraphicsEnvironment.getLocalGraphicsEnvironment();
+//		Font[] fonts = e.getAllFonts();
+//		Vector<String> allFonts = new Vector<String>();
+//		for (Font f : fonts) {
+//			allFonts.add(f.getName());
+//		}
+		
 		_fontAndColourPanel.add(_fontButton);
 		_fontAndColourPanel.add(_colourButton);
 		_textOptionPanel.add(_fontAndColourPanel, BorderLayout.EAST);
-		// spinner panels
-
+		
+		//Add and construct panel with start and end time spinners.
 		_spinnerPanel1.setLayout(new FlowLayout(FlowLayout.LEFT));
 		_spinnerPanel1.add(_durationLabel1);
 		_spinnerPanel1.add(_hoursSpinner1);
@@ -178,36 +175,33 @@ public class TextPane extends JPanel {
 
 		_textOptionPanel.add(spinnersPanel, BorderLayout.SOUTH);
 
-		TitledBorder addTextBorder = BorderFactory.createTitledBorder("Add text");
+		TitledBorder addTextBorder = BorderFactory.createTitledBorder("Add Text:");
 		_addTextPanel.setBorder(addTextBorder);
 
 		_addTextPanel.add(_textOptionPanel, BorderLayout.CENTER);
 
-		// image and confirm buttons
-		_imageAndConfirmPanel.setLayout(new GridLayout(0,1));
+		//Add and construct panel with add and delete caption buttons
+		_addAndDeletePanel.setLayout(new GridLayout(0,1));
 		_confirmationPanel.setLayout(new GridLayout(1,0));
 		_confirmationPanel.add(_addButton);
 		_confirmationPanel.add(_deleteButton);
-
-		_imageAndConfirmPanel.add(_confirmationPanel);
-
-		_addTextPanel.add(_imageAndConfirmPanel, BorderLayout.SOUTH);
+		_addAndDeletePanel.add(_confirmationPanel);
+		_addTextPanel.add(_addAndDeletePanel, BorderLayout.SOUTH);
 		_textAndChangesPanel.add(_addTextPanel);
 
-		//****CHANGES PANEL******
+		//Add and construct panel with table of captions.
 		TitledBorder changeBorder = new TitledBorder("Added Captions:");
 		_changesPanel.setBorder(changeBorder);
 		_changesPanel.setLayout(new BorderLayout());
 		_changesPanel.add(_tableScrollPane, BorderLayout.CENTER);
 		_captionsTable.getTableHeader().setReorderingAllowed(false);
-		// Add Table buttons
 		_tableButtonsPanel.setLayout(new GridLayout(1,0));
+		_exportPanel.setLayout(new GridLayout(1,1));
+		_exportPanel.add(_exportingButton);
+		_exportPanel.add(_cancelButton);
+		_tableButtonsPanel.add(_exportPanel);
 
-		_editAndDeletePanel.setLayout(new GridLayout(1,1));
-		_editAndDeletePanel.add(_exportingButton);
-		_editAndDeletePanel.add(_cancelButton);
-		_tableButtonsPanel.add(_editAndDeletePanel);
-
+		//Set up progressBar and add it to panel.
 		_progressBar.setString("No Task Being Performed");
 		_progressBar.setStringPainted(true);
 		_progressBar.setPreferredSize(new Dimension(370, 30));
@@ -217,38 +211,53 @@ public class TextPane extends JPanel {
 
 		_changesPanel.add(_progressAndButtonPanel, BorderLayout.SOUTH);
 
-		// Add Changes panel
+		// Add Changes panel.
 		_textAndChangesPanel.add(_changesPanel);
 
+		//Set default widths in the table.
 		add(_textAndChangesPanel, BorderLayout.CENTER);
 		_captionsTable.getColumnModel().getColumn(0).setPreferredWidth(130);
 		_captionsTable.getColumnModel().getColumn(4).setPreferredWidth(60);
 		_captionsTable.getColumnModel().getColumn(3).setPreferredWidth(60);
 
+		//Set listeners for all buttons.
+		setListeners();
+	}
 
-		//-------END OF LAYING OUT OF COMPONENTS-----------
-
-
-		//---------START LISTENERS/FUNCTIONALITY-----------
-
+	/**
+	 * Method for setting listeners for TextPane's Buttons.
+	 */
+	private void setListeners() {
+		
+		/*
+		 * Adds caption details as a new line in caption table.
+		 */
 		_addButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				//Add caption to the table.
 				addCaptionToTable();
 			}
 		});
 
+		/*
+		 * Removes selected line from caption table.
+		 */
 		_deleteButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (_captionsTable.getSelectedRow() != -1) {
+					//Remove selected row of table.
 					_tableModel.removeRow(_captionsTable.getSelectedRow());
 				}
 			}	
 		});
 
+		/*
+		 * Opens new Font Chooser, to select new font and size.
+		 */
 		_fontButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -271,6 +280,9 @@ public class TextPane extends JPanel {
 			}
 		});
 
+		/*
+		 * Opens up new Color chooser, to select new font color.
+		 */
 		_colourButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -282,15 +294,15 @@ public class TextPane extends JPanel {
 				// Convert color to hex to be used in avconv.
 				if (newColour != null) {
 					String hex = Integer.toHexString(newColour.getRGB());
-					System.out.println(newColour.getRed());
-					System.out.println(newColour.getGreen());
-					System.out.println(newColour.getBlue());
 					_colourHexValue = "0x" + hex.substring(2);
-					System.out.println(_colourHexValue);
 				}
 			}
 		});
 
+		/*
+		 * Creates new video output, applying the selected caption
+		 * to new output.
+		 */
 		_exportingButton.addActionListener(new ActionListener() {
 
 			String[] outputVideoExists;
@@ -346,6 +358,7 @@ public class TextPane extends JPanel {
 				if (canDraw && _captionsTable.getSelectedRow() != -1) {
 					int row = _captionsTable.getSelectedRow();
 
+					//Start new 
 					_avconvTask = new AvconvTask(TextPane.this, PlayerPane.getInstance().getMediaPath(),
 							_tableModel.getValueAt(row, 0).toString(), 
 							getTimeInSeconds(_tableModel.getValueAt(row, 1).toString()), 
@@ -367,29 +380,6 @@ public class TextPane extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				if (_avconvTask != null) {
 					_avconvTask.cancel(true);
-				}
-			}
-		});
-
-		_chooseVideoButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				JFileChooser fc = new JFileChooser();
-				int returnVal = fc.showOpenDialog(null);
-				if (returnVal == JFileChooser.APPROVE_OPTION) {
-
-					String type;
-					try {
-						// Check if chosen file is a video
-						type = Files.probeContentType(fc.getSelectedFile().toPath());
-						if (type.contains("video")) {
-							_inputVideo.setText(fc.getSelectedFile().toString());
-						} else {
-							JOptionPane.showMessageDialog(null, "Invalid video file chosen.");
-							return;
-						}
-					} catch (IOException e1) {}
 				}
 			}
 		});

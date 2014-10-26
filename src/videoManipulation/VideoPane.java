@@ -55,7 +55,6 @@ public class VideoPane extends JPanel {
 
 	private JButton _applyRotate = new JButton("Apply Rotate");
 	private JButton _applyFlip = new JButton("Apply Flip");
-	//private JButton _applySpeedChange = new JButton("Apply Speed Change");
 	private JButton _applyFade = new JButton("Apply Fade");
 	private JButton _cancelButton = new JButton("Cancel");
 
@@ -75,7 +74,6 @@ public class VideoPane extends JPanel {
 	private File _selectedVideo;
 
 	private OrientationWorker _oriWorker;
-	private SpeedChangeWorker _spdWorker;
 	private FadeWorker _fadeWorker;
 
 	private SaveOutputChooser saveVideoChooser;
@@ -360,9 +358,6 @@ public class VideoPane extends JPanel {
 				if (_oriWorker != null) {
 					_oriWorker.cancel(true);
 				}
-				if (_spdWorker != null) {
-					_spdWorker.cancel(true);
-				}
 				if (_fadeWorker != null) {
 					_fadeWorker.cancel(true);
 				}
@@ -402,4 +397,3 @@ public class VideoPane extends JPanel {
 		return outTime;
 	}
 }
-
