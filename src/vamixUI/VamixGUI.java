@@ -25,8 +25,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -54,7 +52,7 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 	private static VamixGUI _guiInstance = null;
 
 	private JTabbedPane _tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-	private DirPane _fileTab = new DirPane(new File(System.getProperty("user.dir")));
+	//private DirPane _fileTab = new DirPane(new File(System.getProperty("user.dir")));
 	private AudioPane _audioTab = new AudioPane();
 	private TextPane _textTab = new TextPane();
 	private VideoPane _videoTab = new VideoPane();
@@ -108,7 +106,7 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 
 		//Set size and add tabs to tabbedPane.
 		_tabbedPane.setPreferredSize(new Dimension(400, 550));
-		_tabbedPane.add(_fileTab, "Files");
+		//_tabbedPane.add(_fileTab, "Files"); TODO
 		_tabbedPane.add(_audioTab, "Audio");
 		_tabbedPane.add(_videoTab, "Video");
 		_tabbedPane.add(_textTab, "Text");
@@ -121,7 +119,6 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 		//Set sizes of the top button panel and its buttons.
 		_topButtonPanel.setPreferredSize(new Dimension(600,50));
 		_fileButton.setPreferredSize(new Dimension(170,50));
-		//_saveButton.setPreferredSize(new Dimension(170,50)); TODO
 		_downloadButton.setPreferredSize(new Dimension(170,50));
 
 		//Set icons onto top buttons.
@@ -208,14 +205,11 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 		_leftPanel.add(_botButtonPanel, BorderLayout.SOUTH);
 
 		//Add Main frame as listener to all appropriate components.
-		//_saveButton.addActionListener(this); TODO
 		_downloadButton.addActionListener(this);
-
 		_playButton.addActionListener(this);
 		_stopButton.addActionListener(this);
 		_fastFwdButton.addActionListener(this);
 		_rewindButton.addActionListener(this);
-
 		_muteButton.addActionListener(this);
 		_volumeControl.addChangeListener(this);
 

@@ -76,7 +76,7 @@ public class TextSaveHandler {
 			while((line = bfw.readLine()) != null ) {
 				//Get all lines except first and add them to the model.
 				if (!line.contains("Text	Start	End	Font	Colour	")) {
-					tm.addRow( line.split("\t") );
+					tm.addRow(line.split("\t"));
 				}
 			}
 
