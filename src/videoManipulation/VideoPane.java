@@ -1,43 +1,38 @@
 package videoManipulation;
 
 import helperAndResourceClasses.BashCommand;
+import helperAndResourceClasses.SaveOutputChooser;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JSpinner;
-import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
+
+import vlcPlayer.PlayerPane;
 
 
 @SuppressWarnings("serial")
-public class VideoPane extends JPanel implements ActionListener {
+public class VideoPane extends JPanel {
+
+	private VideoPane videoPane = this;
 
 	private JPanel _orientationAndVideoSelectPanel = new JPanel(new BorderLayout());
-	private JPanel _videoSelectPanel = new JPanel();
 	private JPanel _orientationPanel = new JPanel(new GridLayout(1,2));
 	private JPanel _rotatePanel = new JPanel(new BorderLayout());
 	private JPanel _flipPanel = new JPanel(new BorderLayout());
 	private JPanel _rotateButtonPanel = new JPanel();
 	private JPanel _flipButtonPanel = new JPanel();
-	private JPanel _speedChangePanel = new JPanel();
 	private JPanel _fadePanel = new JPanel(new BorderLayout());
 	private JPanel _fadeTimePanel = new JPanel(new BorderLayout());
 	private JPanel _startFadeTimePanel = new JPanel(new BorderLayout());
@@ -47,25 +42,20 @@ public class VideoPane extends JPanel implements ActionListener {
 	private JPanel _fadeButtonPanel = new JPanel();
 	private JPanel _processAndCancelPanel = new JPanel(new BorderLayout());
 
-	private JTextField _videoSelectField = new JTextField(15);
-
 	private JLabel _rotateLabel = new JLabel("Rotate Video:");
 	private JLabel _flipLabel = new JLabel("Flip Video:");
 
 	private String[] _rotateOptions = {"90°", "180°", "270°"};
 	private String[] _flipOptions = {"Flip Vertically", "Flip Horizontally"};
-	private String[] _speedOptions = {"2x", "1.5x", "0.75x", "0.5x",};
 	private String[] _fadeOptions = {"Fade In", "Fade Out"};
 
 	private JComboBox<String> _rotateSelect = new JComboBox<String>(_rotateOptions);
 	private JComboBox<String> _flipSelect = new JComboBox<String>(_flipOptions);
-	private JComboBox<String> _speedSelect = new JComboBox<String>(_speedOptions);
 	private JComboBox<String> _fadeSelect = new JComboBox<String>(_fadeOptions);
 
 	private JButton _applyRotate = new JButton("Apply Rotate");
 	private JButton _applyFlip = new JButton("Apply Flip");
-	private JButton _videoSelectButton = new JButton("Select Video To Edit");
-	private JButton _applySpeedChange = new JButton("Apply Speed Change");
+	//private JButton _applySpeedChange = new JButton("Apply Speed Change");
 	private JButton _applyFade = new JButton("Apply Fade");
 	private JButton _cancelButton = new JButton("Cancel");
 
@@ -73,14 +63,12 @@ public class VideoPane extends JPanel implements ActionListener {
 	private final JSpinner _hoursSpinner1 = new JSpinner(new SpinnerNumberModel(0, 0, 99, 1));
 	private final JSpinner _minsSpinner1 = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
 	private final JSpinner _secsSpinner1 = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
-	private final JLabel _timeSep1 = new JLabel(":");
-	private final JLabel _timeSep2 = new JLabel(":");
-	private final JLabel _durationLabel = new JLabel("Fade Duration (hh:mm:ss)");
-	private final JSpinner _hoursSpinner2 = new JSpinner(new SpinnerNumberModel(0, 0, 99, 1));
+	private final JLabel _timeSeparator1 = new JLabel(":");
+	private final JLabel _timeSeparator2 = new JLabel(":");
+	private final JLabel _durationLabel = new JLabel("Fade Duration (mm:ss)");
 	private final JSpinner _minsSpinner2 = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
 	private final JSpinner _secsSpinner2 = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
-	private final JLabel _timeSep3 = new JLabel(":");
-	private final JLabel _timeSep4 = new JLabel(":");
+	private final JLabel _timeSeparator3 = new JLabel(":");
 
 	JProgressBar _processBar = new JProgressBar();
 
@@ -90,17 +78,14 @@ public class VideoPane extends JPanel implements ActionListener {
 	private SpeedChangeWorker _spdWorker;
 	private FadeWorker _fadeWorker;
 
-	public VideoPane() {
+	private SaveOutputChooser saveVideoChooser;
 
-		//Orientation (Rotate and flip) Layout:
+	/**
+	 * Constructor for VideoPane
+	 */
+	public VideoPane() {
+		
 		_orientationAndVideoSelectPanel.add(_orientationPanel, BorderLayout.CENTER);
-//		//_orientationAndVideoSelectPanel.add(_videoSelectPanel, BorderLayout.NORTH);
-//
-//		_videoSelectPanel.setBorder(BorderFactory.createTitledBorder("Select Video To Edit:"));
-//		_videoSelectPanel.setPreferredSize(new Dimension(370, 70));
-//		_videoSelectPanel.add(_videoSelectField);
-//		_videoSelectField.setEditable(false);
-//		_videoSelectPanel.add(_videoSelectButton);
 
 		_orientationPanel.setPreferredSize(new Dimension(370, 100));
 		_orientationPanel.setBorder(BorderFactory.createTitledBorder("Video Orientation:"));
@@ -119,14 +104,6 @@ public class VideoPane extends JPanel implements ActionListener {
 
 		add(_orientationAndVideoSelectPanel);
 
-		//Speed Changing Function Layout:
-		_speedChangePanel.setBorder(BorderFactory.createTitledBorder("Change Speed of Video:"));
-		_speedChangePanel.setPreferredSize(new Dimension(370, 80));
-		_speedChangePanel.add(_speedSelect);
-		_speedChangePanel.add(_applySpeedChange);
-
-		add(_speedChangePanel);
-
 		//Fade Function Layout:
 		_fadePanel.setBorder(BorderFactory.createTitledBorder("Add Fade to Video:"));
 		_fadePanel.setPreferredSize(new Dimension(370, 150));
@@ -143,17 +120,15 @@ public class VideoPane extends JPanel implements ActionListener {
 		_startFadeTimePanel.add(_startTimeLabel, BorderLayout.NORTH);
 		_startFadeTimePanel.add(_startTimeSpinnerPanel, BorderLayout.CENTER);
 		_startTimeSpinnerPanel.add(_hoursSpinner1);
-		_startTimeSpinnerPanel.add(_timeSep1);
+		_startTimeSpinnerPanel.add(_timeSeparator1);
 		_startTimeSpinnerPanel.add(_minsSpinner1);
-		_startTimeSpinnerPanel.add(_timeSep2);
+		_startTimeSpinnerPanel.add(_timeSeparator2);
 		_startTimeSpinnerPanel.add(_secsSpinner1);
 
 		_fadeDurationTimePanel.add(_durationLabel, BorderLayout.NORTH);
 		_fadeDurationTimePanel.add(_durationSpinnerPanel, BorderLayout.CENTER);
-		_durationSpinnerPanel.add(_hoursSpinner2);
-		_durationSpinnerPanel.add(_timeSep3);
 		_durationSpinnerPanel.add(_minsSpinner2);
-		_durationSpinnerPanel.add(_timeSep4);
+		_durationSpinnerPanel.add(_timeSeparator3);
 		_durationSpinnerPanel.add(_secsSpinner2);
 
 		add(_fadePanel);
@@ -169,245 +144,202 @@ public class VideoPane extends JPanel implements ActionListener {
 
 		add(_processAndCancelPanel);
 
+		setListeners();
+	}
+
+
+	private void setListeners() {
+
 		//Add action listeners:
-		_applyRotate.addActionListener(this);
-		_applyFlip.addActionListener(this);
-		_videoSelectButton.addActionListener(this);
-		_applySpeedChange.addActionListener(this);
-		_applyFade.addActionListener(this);
-		_cancelButton.addActionListener(this);
-	} 
+		_applyRotate.addActionListener(new ActionListener() {
 
+			String[] outputVideoExists;
 
-	@Override
-	public void actionPerformed(ActionEvent ae) {
-		if (ae.getSource() == _cancelButton) {
-			//Cancel all workers available.
-			if (_oriWorker != null) {
-				_oriWorker.cancel(true);
-			}
-			if (_spdWorker != null) {
-				_spdWorker.cancel(true);
-			}
-			if (_fadeWorker != null) {
-				_fadeWorker.cancel(true);
-			}
-			
-			System.out.println(getDurationTime(_selectedVideo.getAbsolutePath())); //TODO
-			
-		} else if (ae.getSource() == _videoSelectButton) {
-			JFileChooser fileChooser = new JFileChooser();
-			int returnValue = fileChooser.showOpenDialog(null);
-			if (returnValue == JFileChooser.APPROVE_OPTION) {
-
-				File selectedFile = fileChooser.getSelectedFile();
-
-				String type;
-
-				//Some error checking:
-				try {
-					type = Files.probeContentType(selectedFile.toPath());
-					//If the selected file is an audio file:
-					System.out.println(type);
-					if(type.contains("video")) {
-
-						//Set it as new selected video.
-						_selectedVideo = selectedFile;
-						_videoSelectField.setText(selectedFile.getName());
-
-						System.out.println(getFPS(_selectedVideo.getAbsolutePath()));
-					} else {
-						//Else return error.
-						JOptionPane.showMessageDialog(null, "File selected is not a video " +
-								"file. Please select another file.");
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			} 
-
-		} else if (ae.getSource() == _applyRotate || ae.getSource() == _applyFlip) {
-
-			//Send error if no video is selected.
-			if (_videoSelectField.getText().equals("")) {
-				JOptionPane.showMessageDialog(null, "No video file to edit has been selected. " +
-						"Please select a file.");	
-			} else {
-				//Ask for output file name:
-				String outputFile = JOptionPane.showInputDialog(null, "Enter output video file name:", "Output File Name",
-						JOptionPane.WARNING_MESSAGE);
-
-				boolean canRotateOrFlip = false;
-
-				if (outputFile.equals("")) {
-					//If no output name was given, send error.
-					JOptionPane.showMessageDialog(null, "No output name given. Please revise.");	
-
-				} else if (outputFile != null) {
-					//Check if output file already exists.
-					String wd = System.getProperty("user.dir");
-					String path = wd + "/" + outputFile + ".mp4";
-
-					String[] outputNameExists = new BashCommand().runBash("if [ ! -f " + path + " ]; then echo 0; else echo 1; fi");
-
-					if (outputNameExists[0].equals("1")) {
-						//If file exists, ask for overwrite:
-						int selectedOption = JOptionPane.showConfirmDialog(null, 
-								"Output file exists. Overwrite?", 
-								"Choose", 
-								JOptionPane.YES_NO_OPTION); 
-						if (selectedOption == JOptionPane.YES_OPTION) {
-							new BashCommand().runBash("rm " + path);
-							canRotateOrFlip = true;
-						} else {
-							canRotateOrFlip = false;
-						}
-					} else {
-						canRotateOrFlip = true;
-					}
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if (PlayerPane.getInstance().getMediaPath().equals("")) {
+					JOptionPane.showMessageDialog(null, "Error: No video to edit. Please select a file by " +
+							"playing one using the Open button.");
+					return;
 				}
 
+				//Open new save chooser for video output name.
+				saveVideoChooser = new SaveOutputChooser();
+				saveVideoChooser.setDialogTitle("Save Rotated Video");
 
-				if (canRotateOrFlip) {
-					if (ae.getSource() == _applyRotate) {
-						String rotateOption = _rotateOptions[(_rotateSelect.getSelectedIndex())].replace("°", "");
-						_oriWorker = new OrientationWorker(this, _selectedVideo, outputFile + ".mp4", rotateOption, false);
-						_oriWorker.execute();
+				//Use bash to check if output video already exists.
+				outputVideoExists = new BashCommand().runBash("if [ ! -f " + 
+						saveVideoChooser.getSavePath() + ".mp4" + " ]; then echo 0; else echo 1; fi");
 
-						_processBar.setIndeterminate(true);
-						_processBar.setString("Rotating In Progress");
+				boolean canRotate = false;
 
-						disableFunctions();
-					} else {
-						String flipOption = _flipOptions[(_flipSelect.getSelectedIndex())];
-						_oriWorker = new OrientationWorker(this, _selectedVideo, outputFile + ".mp4", flipOption, true);
-						_oriWorker.execute();
-
-						_processBar.setIndeterminate(true);
-						_processBar.setString("Video Flip In Progress");
-
-						disableFunctions();
-					}
-				}
-			} 
-
-		} else if (ae.getSource() == _applySpeedChange) {
-
-			//Send error if no video is selected.
-			if (_videoSelectField.getText().equals("")) {
-				JOptionPane.showMessageDialog(null, "No video file to edit has been selected. " +
-						"Please select a file.");	
-			} else {
-				//Ask for output file name:
-				String outputFile = JOptionPane.showInputDialog(null, "Enter output video file name:", "Output File Name",
-						JOptionPane.WARNING_MESSAGE);
-
-				boolean canChangeSpeed = false;
-
-				if (outputFile.equals("")) {
-					//If no output name was given, send error.
-					JOptionPane.showMessageDialog(null, "No output name given. Please revise.");	
-
-				} else if (outputFile != null) {
-					//Check if output file already exists.
-					String wd = System.getProperty("user.dir");
-					String path = wd + "/" + outputFile + ".mp4";
-
-					String[] outputNameExists = new BashCommand().runBash("if [ ! -f " + path + " ]; then echo 0; else echo 1; fi");
-
-					if (outputNameExists[0].equals("1")) {
-						//If output file exists, ask for overwrite:
-						int selectedOption = JOptionPane.showConfirmDialog(null, 
-								"Output file exists. Overwrite?", 
-								"Choose", 
-								JOptionPane.YES_NO_OPTION); 
-
-						if (selectedOption == JOptionPane.YES_OPTION) {
-							new BashCommand().runBash("rm " + path);
-							canChangeSpeed = true;
-						} else {
-							canChangeSpeed = false;
-						}
-					} else {
-						canChangeSpeed = true;
-					}
+				//Send error if no file name given.
+				if (saveVideoChooser.getSavePath().equals("")) {
+					JOptionPane.showMessageDialog(null, "Error: Please supply name for output video.");
+					return;
 				}
 
-				if (canChangeSpeed) {
-					_spdWorker = new SpeedChangeWorker(this, _selectedVideo, outputFile + ".mp4", _speedOptions[_speedSelect.getSelectedIndex()]);
-					_spdWorker.execute();
+				//Ask for overwrite if output video file already exists.
+				if (outputVideoExists[0].equals("1") && !saveVideoChooser.getSavePath().equals("")) {
+					Object[] options = { "Overwrite", "Cancel" };
+					int enableOverwrite = JOptionPane.showOptionDialog(null, saveVideoChooser.getSavePath() + ".mp4" 
+							+ " already exists. Overwrite file? Please choose a new filename if not overriding.", "File " +
+									"Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+
+					if (enableOverwrite == 0) {
+						canRotate = true;
+					}
+				} else {
+					//Else rotate is fine.
+					canRotate = true;
+				}
+
+				if (canRotate) {
+
+					_selectedVideo = new File(PlayerPane.getInstance().getMediaPath());
+					String rotateOption = _rotateOptions[(_rotateSelect.getSelectedIndex())].replace("°", "");
+
+					_oriWorker = new OrientationWorker(videoPane, _selectedVideo, saveVideoChooser.getSavePath() 
+							+ ".mp4", rotateOption, false);
+					_oriWorker.execute();
 
 					_processBar.setIndeterminate(true);
-					_processBar.setString("Speed Change In Progress");
+					_processBar.setString("Rotating In Progress");
 
 					disableFunctions();
 				}
 			}
-		} else if(ae.getSource() == _applyFade) {
+		});
+
+		_applyFlip.addActionListener(new ActionListener() {
+
+			String[] outputVideoExists;
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				if (PlayerPane.getInstance().getMediaPath().equals("")) {
+					JOptionPane.showMessageDialog(null, "Error: No video to edit. Please select a file by " +
+							"playing one using the Open button.");
+					return;
+				}
+
+				//Open new save chooser for video output name.
+				saveVideoChooser = new SaveOutputChooser();
+				saveVideoChooser.setDialogTitle("Save Flipped Video");
+
+				//Use bash to check if output video already exists.
+				outputVideoExists = new BashCommand().runBash("if [ ! -f " + 
+						saveVideoChooser.getSavePath() + ".mp4" + " ]; then echo 0; else echo 1; fi");
+
+				boolean canFlip = false;
+
+				//Send error if no file name given.
+				if (saveVideoChooser.getSavePath().equals("")) {
+					JOptionPane.showMessageDialog(null, "Error: Please supply name for output video.");
+					return;
+				}
+
+				//Ask for overwrite if output video file already exists.
+				if (outputVideoExists[0].equals("1") && !saveVideoChooser.getSavePath().equals("")) {
+					Object[] options = { "Overwrite", "Cancel" };
+					int enableOverwrite = JOptionPane.showOptionDialog(null, saveVideoChooser.getSavePath() + ".mp4" 
+							+ " already exists. Overwrite file? Please choose a new filename if not overriding.", "File " +
+									"Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+
+					if (enableOverwrite == 0) {
+						canFlip = true;
+					}
+				} else {
+					//Else flip is fine.
+					canFlip = true;
+				}
+
+				if (canFlip) {
+
+					_selectedVideo = new File(PlayerPane.getInstance().getMediaPath());
+					String rotateOption = _flipOptions[(_flipSelect.getSelectedIndex())];
+
+					_oriWorker = new OrientationWorker(videoPane, _selectedVideo, saveVideoChooser.getSavePath() 
+							+ ".mp4", rotateOption, true);
+					_oriWorker.execute();
+
+					_processBar.setIndeterminate(true);
+					_processBar.setString("Flipping In Progress");
+
+					disableFunctions();
+				}
+			}
+		});
+
+		_applyFade.addActionListener(new ActionListener() {
+
+			String[] outputVideoExists;
 			
-			int selectedVideoFPS = getFPS(_selectedVideo.getAbsolutePath());
-			int startFadeTime = getTimeInSeconds(_hoursSpinner1.getValue().toString(), 
-					_minsSpinner1.getValue().toString(), _secsSpinner1.getValue().toString());
-			int fadeDuration = getTimeInSeconds(_hoursSpinner2.getValue().toString(), 
-					_minsSpinner2.getValue().toString(), _secsSpinner2.getValue().toString());
-			
-			//Send error if no video is selected.
-			if (_videoSelectField.getText().equals("")) {
-				JOptionPane.showMessageDialog(null, "No video file to edit has been selected. " +
-						"Please select a file.");	
-			
-				//Send error if the fade duration is zero.
-			} else if(fadeDuration == 0) {
-				JOptionPane.showMessageDialog(null, "Please enter a duration greater than 0.");	
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				//Send error if no video is selected.
+				if (PlayerPane.getInstance().getMediaPath().equals("")) {
+					JOptionPane.showMessageDialog(null, "Error: No video to edit. Please select a file by " +
+							"playing one using the Open button.");
+					return;
+				} 
 				
+				int selectedVideoFPS = PlayerPane.getInstance().getFPS();
+				int startFadeTime = getTimeInSeconds(_hoursSpinner1.getValue().toString(), 
+						_minsSpinner1.getValue().toString(), _secsSpinner1.getValue().toString());
+				int fadeDuration = getTimeInSeconds("0", 
+						_minsSpinner2.getValue().toString(), _secsSpinner2.getValue().toString());
+
+				if(fadeDuration == 0) {
+					JOptionPane.showMessageDialog(null, "Please enter a duration greater than 0.");	
+					return;
+
+				} 
 				//Send error if the start of fade duration is greater 
 				//than the length of the video.
-			} else if(startFadeTime > getDurationTime(_selectedVideo.getAbsolutePath())) {
-				JOptionPane.showMessageDialog(null, "Start of fade exceeds the length of the " +
-						"video. Please revise");	
-				
-			}else {
+				if(startFadeTime > PlayerPane.getInstance().getPlayTime()) {
+					JOptionPane.showMessageDialog(null, "Start of fade exceeds the length of the " +
+							"video. Please revise");	
+
+				} 
+
 				//Ask for output file name:
-				String outputFile = JOptionPane.showInputDialog(null, "Enter output video file name:", "Output File Name",
-						JOptionPane.WARNING_MESSAGE);
+				//Open new save chooser for video output name.
+				saveVideoChooser = new SaveOutputChooser();
+				saveVideoChooser.setDialogTitle("Save Faded Video");
+
+				//Use bash to check if output video already exists.
+				outputVideoExists = new BashCommand().runBash("if [ ! -f " + 
+						saveVideoChooser.getSavePath() + ".mp4" + " ]; then echo 0; else echo 1; fi");
 
 				boolean canFade = false;
 
-				if (outputFile.equals("")) {
+				if (saveVideoChooser.getSavePath().equals("")) {
 					//If no output name was given, send error.
 					JOptionPane.showMessageDialog(null, "No output name given. Please revise.");	
 
-				} else if (outputFile != null) {
-					//Check if output file already exists.
-					String wd = System.getProperty("user.dir");
-					String path = wd + "/" + outputFile + ".mp4";
+				} //Ask for overwrite if output video file already exists.
+				if (outputVideoExists[0].equals("1") && !saveVideoChooser.getSavePath().equals("")) {
+					Object[] options = { "Overwrite", "Cancel" };
+					int enableOverwrite = JOptionPane.showOptionDialog(null, saveVideoChooser.getSavePath() + ".mp4" 
+							+ " already exists. Overwrite file? Please choose a new filename if not overriding.", "File " +
+									"Already Exists", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
-					String[] outputNameExists = new BashCommand().runBash("if [ ! -f " + path + " ]; then echo 0; else echo 1; fi");
-
-					if (outputNameExists[0].equals("1")) {
-						//If output file exists, ask for overwrite:
-						int selectedOption = JOptionPane.showConfirmDialog(null, 
-								"Output file exists. Overwrite?", 
-								"Choose", 
-								JOptionPane.YES_NO_OPTION); 
-
-						if (selectedOption == JOptionPane.YES_OPTION) {
-							new BashCommand().runBash("rm " + path);
-							canFade = true;
-						} else {
-							canFade = false;
-						}
-					} else {
+					if (enableOverwrite == 0) {
 						canFade = true;
 					}
+				} else {
+					//Else adding fade is fine.
+					canFade = true;
 				}
 
 				if (canFade) {
+					_selectedVideo = new File(PlayerPane.getInstance().getMediaPath());
 					String fadeSelection = _fadeOptions[_fadeSelect.getSelectedIndex()];
 					String startFrame = Integer.toString(selectedVideoFPS * startFadeTime); 
 					String durationOfFrames = Integer.toString(selectedVideoFPS * fadeDuration);
-					
-					_fadeWorker = new FadeWorker(this, _selectedVideo, outputFile + ".mp4", 
+
+					_fadeWorker = new FadeWorker(videoPane, _selectedVideo, saveVideoChooser.getSavePath() + ".mp4", 
 							fadeSelection, startFrame, durationOfFrames);
 					_fadeWorker.execute();
 
@@ -417,98 +349,33 @@ public class VideoPane extends JPanel implements ActionListener {
 					disableFunctions();
 				}
 			}
-		}
-	}
+		});
 
-	/**
-	 * Method for removing the temporary files created
-	 * by the speed adjustment function.
-	 */
-	public void removeTempFiles() {
-		//Remove temp files:
-		new BashCommand().runBash("rm audio.wav");
-		new BashCommand().runBash("rm audioq.wav");
-		new BashCommand().runBash("rm video.mp4");
-		new BashCommand().runBash("rm output.mp4");
-	}
 
-	/**
-	 * Method for retrieving the 'frames per second' 
-	 * of a given video path.
-	 */
-	public int getFPS(String path) {
-		try {
-			ProcessBuilder builder = new ProcessBuilder("avprobe", path);
-			builder.redirectErrorStream(true);
-			Process p = builder.start();
+		_cancelButton.addActionListener(new ActionListener() {
 
-			InputStream stdout = p.getInputStream();
-
-			BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-			String line = null;
-
-			//New list for probe output.
-			ArrayList<String> probeOutput = new ArrayList<String>();
-
-			while ((line = stdoutBuffered.readLine()) != null ) {
-				if (line.contains("fps")) {
-					probeOutput.add(line);
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				//Cancel all workers available.
+				if (_oriWorker != null) {
+					_oriWorker.cancel(true);
+				}
+				if (_spdWorker != null) {
+					_spdWorker.cancel(true);
+				}
+				if (_fadeWorker != null) {
+					_fadeWorker.cancel(true);
 				}
 			}
-			//Tons of splitting to extract fps.
-			String[] split = probeOutput.get(0).split(",");
-			String[] split2 = split[4].split(" ");
-			return Math.round(Float.parseFloat(split2[1]));
+		});
+	} 
 
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return 0;
-	}
-
-	/**
-	 * Method for retrieving the total duration time 
-	 * of a given video path (in seconds).
-	 */
-	public int getDurationTime(String path) {
-		try {
-			ProcessBuilder builder = new ProcessBuilder("avprobe", path);
-			builder.redirectErrorStream(true);
-			Process p = builder.start();
-
-			InputStream stdout = p.getInputStream();
-
-			BufferedReader stdoutBuffered = new BufferedReader(new InputStreamReader(stdout));
-			String line = null;
-
-			//New list for probe output.
-			ArrayList<String> probeOutput = new ArrayList<String>();
-
-			while ((line = stdoutBuffered.readLine()) != null ) {
-				if (line.contains("Duration")) {
-					probeOutput.add(line);
-				}
-			}
-			//Tons of splitting to extract duration time.
-			String[] split = probeOutput.get(0).split(",");
-			String[] split2 = split[0].split(" ");
-			String[] split3 = split2[3].split("\\.");
-			String[] durationTime = split3[0].split(":");
-			return getTimeInSeconds(durationTime[0], durationTime[1], durationTime[2]);
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return 0;
-	}
-	
 	/**
 	 * Enables Function Buttons;
 	 */
 	public void enableFunctions() {
 		_applyRotate.setEnabled(true);
 		_applyFlip.setEnabled(true);
-		_applySpeedChange.setEnabled(true);
 		_applyFade.setEnabled(true);
 	}
 
@@ -518,7 +385,6 @@ public class VideoPane extends JPanel implements ActionListener {
 	public void disableFunctions() {
 		_applyRotate.setEnabled(false);
 		_applyFlip.setEnabled(false);
-		_applySpeedChange.setEnabled(false);
 		_applyFade.setEnabled(false);
 	}
 

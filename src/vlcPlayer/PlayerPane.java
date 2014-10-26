@@ -135,7 +135,7 @@ public class PlayerPane extends JPanel {
 	 * Start playing media with the given media 
 	 * path ONLY ONCE.
 	 * 
-	 * Used mainly for previewing video/audio.
+	 * Used mainly for previewing audio.
 	 */
 	public void tempPlay(String path) {
 		//Play from the given mediaPath.
@@ -224,11 +224,17 @@ public class PlayerPane extends JPanel {
 	public boolean hasAudioStream() {
 		int audioTracks = _eMPC.getMediaPlayer().getAudioTrackCount();
 		
-		//TODO System.out.println(_eMPC.getMediaPlayer().getAudioTrackCount());
-		
 		if (audioTracks == 0) {
 			return false;
 		}
 		return true;
+	}
+	
+	/**
+	 * Returns the fps of the current video.
+	 * @return
+	 */
+	public int getFPS() {
+		return (int) _eMPC.getMediaPlayer().getFps();
 	}
 }
