@@ -1,7 +1,11 @@
 package vamixUI;
-import helperAndResourceClasses.DownloadHandler;
-import helperAndResourceClasses.PlayFileChooseButton;
-import helperAndResourceClasses.ResImage;
+import functionality.audio.AudioPane;
+import functionality.subtitle.SubtitlePane;
+import functionality.text.TextPane;
+import functionality.video.VideoPane;
+import helperClasses.DownloadHandler;
+import helperClasses.PlayFileChooseButton;
+import helperClasses.ResImage;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -26,13 +30,9 @@ import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import audioRelated.AudioPane;
 
-import subtitleRelated.SubtitlePane;
-import textRelated.TextPane;
 import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
-import videoRelated.VideoPane;
 import vlcPlayer.PlayerPane;
 
 /**
