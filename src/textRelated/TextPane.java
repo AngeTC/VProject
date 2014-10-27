@@ -8,10 +8,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Vector;
@@ -27,7 +27,6 @@ import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.TitledBorder;
@@ -63,7 +62,6 @@ public class TextPane extends JPanel {
 	private final JButton _saveButton = new JButton("Save data");
 	private final JButton _fontButton = new JButton("Font");
 	private final JButton _colourButton = new JButton("Colour");
-	private final JButton _chooseVideoButton = new JButton("Choose");
 	private final JButton _addButton = new JButton("Add Caption");
 	private final JButton _exportingButton = new JButton("Add Selected Text");
 	private final JButton _deleteButton = new JButton("Delete Caption");
@@ -137,15 +135,6 @@ public class TextPane extends JPanel {
 		_textOptionPanel.setLayout(new BorderLayout());
 		_textOptionPanel.add(_textScroll, BorderLayout.CENTER);
 		_fontAndColourPanel.setLayout(new GridLayout(0,1));
-//		//new JPanel(); TODO
-//		
-//		//Get all 
-//		GraphicsEnvironment e = GraphicsEnvironment.getLocalGraphicsEnvironment();
-//		Font[] fonts = e.getAllFonts();
-//		Vector<String> allFonts = new Vector<String>();
-//		for (Font f : fonts) {
-//			allFonts.add(f.getName());
-//		}
 		
 		_fontAndColourPanel.add(_fontButton);
 		_fontAndColourPanel.add(_colourButton);
@@ -309,11 +298,24 @@ public class TextPane extends JPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
+				//Check if a file is loaded.
 				if (PlayerPane.getInstance().getMediaPath().equals("")) {
 					JOptionPane.showMessageDialog(null, "Error: No video to edit. Please select a file by " +
 							"playing one using the Open button.");
 					return;
 				}
+				
+				//Check if file currently loaded is actually a video.
+				try {
+					if (!Files.probeContentType(new File(PlayerPane.getInstance().getMediaPath()).toPath()).equals("video")) {
+						JOptionPane.showMessageDialog(null, "Error: File loaded is not a video. Please select a video file by " +
+								"playing one using the Open button.");
+						return;
+					}
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				} 
 				
 				if (_tableModel.getRowCount() < 1) {
 					JOptionPane.showMessageDialog(null, "No captions added yet.");
@@ -339,6 +341,14 @@ public class TextPane extends JPanel {
 					return;
 				}
 
+				//Send error if the output name is the same as input's.
+				//(Cannot allow user to overwrite input files with output).
+				if ((saveVideoChooser.getSavePath() + ".mp4").equals(PlayerPane.getInstance().getMediaPath())) {
+					JOptionPane.showMessageDialog(null, "Error: Name for output video is the same as input video name." +
+							" Please revise a new name.");
+					return;
+				}
+				
 				//Ask for overwrite if output video file already exists.
 				if (outputVideoExists[0].equals("1") && !saveVideoChooser.getSavePath().equals("")) {
 					Object[] options = { "Overwrite", "Cancel" };
@@ -395,7 +405,7 @@ public class TextPane extends JPanel {
 					try {
 						type = Files.probeContentType(fc.getSelectedFile().toPath());
 						if (type.contains("text") && fc.getSelectedFile().getName().contains(".txtsavefile")) {
-							TextSaveHandler.loadTable(_captionsTable, fc.getSelectedFile().getName());
+							TextSaveHandler.loadTable(_captionsTable, fc.getSelectedFile().getPath());
 						} else {
 							JOptionPane.showMessageDialog(null, "Invalid save file chosen. Please revise.");
 							return;
@@ -409,11 +419,13 @@ public class TextPane extends JPanel {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String outputFile = JOptionPane.showInputDialog(null, "Enter output save file name:", "Dialog for Input",
-						JOptionPane.WARNING_MESSAGE);
-				if (outputFile != null) {
-					String workingDir = System.getProperty("user.dir");
-					String path = workingDir + "/" + outputFile + ".txtsavefile";
+
+				//Open new save chooser for video output name.
+				saveVideoChooser = new SaveOutputChooser();
+				saveVideoChooser.setDialogTitle("Save Data File");
+				
+				if (!saveVideoChooser.getSavePath().equals("")) {
+					String path = saveVideoChooser.getSavePath() + ".txtsavefile";
 
 					String[] outputSaveExists = new BashCommand().runBash("if [ ! -f " + path + " ]; then echo 0; else echo 1; fi");
 
@@ -424,10 +436,10 @@ public class TextPane extends JPanel {
 								JOptionPane.YES_NO_OPTION); 
 						if (selectedOption == JOptionPane.YES_OPTION) {
 							new BashCommand().runBash("rm " + path);
-							TextSaveHandler.saveTable(_captionsTable, outputFile);
+							TextSaveHandler.saveTable(_captionsTable, saveVideoChooser.getSavePath());
 						} 
 					} else {
-						TextSaveHandler.saveTable(_captionsTable, outputFile);
+						TextSaveHandler.saveTable(_captionsTable, saveVideoChooser.getSavePath());
 					}
 				}
 			}

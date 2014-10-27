@@ -82,6 +82,8 @@ public class TextSaveHandler {
 
 			//Close reader.
 			bfw.close();
-		} catch (Exception e){}
+		} catch (Exception e){
+			System.out.println("Loading Failed");
+		}
 	}
 }

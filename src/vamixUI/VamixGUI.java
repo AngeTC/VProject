@@ -1,5 +1,4 @@
 package vamixUI;
-import fileDirectoryPane.DirPane;
 import helperAndResourceClasses.DownloadHandler;
 import helperAndResourceClasses.PlayFileChooseButton;
 import helperAndResourceClasses.ResImage;
@@ -12,7 +11,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.ImageIcon;
@@ -28,13 +26,13 @@ import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import audioManipulation.AudioPane;
+import audioRelated.AudioPane;
 
 import subtitleRelated.SubtitlePane;
 import textRelated.TextPane;
 import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
-import videoManipulation.VideoPane;
+import videoRelated.VideoPane;
 import vlcPlayer.PlayerPane;
 
 /**
@@ -52,7 +50,6 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 	private static VamixGUI _guiInstance = null;
 
 	private JTabbedPane _tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-	//private DirPane _fileTab = new DirPane(new File(System.getProperty("user.dir")));
 	private AudioPane _audioTab = new AudioPane();
 	private TextPane _textTab = new TextPane();
 	private VideoPane _videoTab = new VideoPane();
@@ -106,7 +103,6 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 
 		//Set size and add tabs to tabbedPane.
 		_tabbedPane.setPreferredSize(new Dimension(400, 550));
-		//_tabbedPane.add(_fileTab, "Files"); TODO
 		_tabbedPane.add(_audioTab, "Audio");
 		_tabbedPane.add(_videoTab, "Video");
 		_tabbedPane.add(_textTab, "Text");
@@ -213,7 +209,7 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 		_muteButton.addActionListener(this);
 		_volumeControl.addChangeListener(this);
 
-		//Set timer component to continuously update the time label:
+		//Set timer component to continuously update the time label and seek bar:
 		Timer currentTimer = new Timer(100, new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -229,8 +225,8 @@ public class VamixGUI extends JFrame implements ActionListener, ChangeListener {
 						TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(mediaTime))
 						);
 
+				//Update time and seek bar.
 				_timeLabel.setText(currentTime);
-
 				_seekBar.setValue(mediaTime.intValue());
 			}
 		});

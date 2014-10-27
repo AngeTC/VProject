@@ -226,8 +226,8 @@ public class DownloadHandler extends JDialog implements ActionListener {
 
 				BashCommand bC = new BashCommand();
 				//Get filename using Bash.
-				String getBaseName = "echo $(basename " + _urlField.getText() + ")";
-				String[] baseNameOutput = bC.runBash(getBaseName);
+				String baseName = "echo $(basename " + _urlField.getText() + ")";
+				String[] baseNameOutput = bC.runBash(baseName);
 
 				//Check if file already exists using bash.
 				String checkFileExists = "if [ ! -f " + baseNameOutput[0] + " ]; then echo 0; else echo 1; fi";
