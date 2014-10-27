@@ -39,7 +39,7 @@ import vlcPlayer.PlayerPane;
  * Main GUI of Vamix program.
  * (A singleton class.)
  * 
- * @author acas212
+ * @author acas212 
  * 
  * Credits to: http://stackoverflow.com/questions/9027317/how-to-convert-milliseconds-to-hhmmss-format
  * (Converting milliseconds to 'time format' -> (hh:mm:ss))
